@@ -1,4 +1,5 @@
 [app]
+source.dir = .
 title = Pocket Option Tool
 package.name = pocketoptiontool
 package.domain = org.trader
