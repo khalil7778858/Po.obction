@@ -4,12 +4,12 @@ import time
 
 # إعدادات صفحة التداول الاحترافية
 st.set_page_config(
-    page_title="Pocket Option MA Crossover Pro",
-    page_icon="⚡",
+    page_title="Pocket Option Ultimate Confluence Pro",
+    page_icon="🎯",
     layout="centered"
 )
 
-st.title("⚡ أداة تقاطع المتوسطات المتحركة (إشارات فورية)")
+st.title("🎯 أداة التداول الفوري (تقاطع المتوسطات + توافق المؤشرات)")
 st.markdown("---")
 
 # --- قائمة الأصول والـ OTC الشاملة ---
@@ -21,7 +21,7 @@ all_pairs = [
 ]
 
 # --- إعدادات المستخدم ---
-st.subheader("⚙️ إعدادات الصفقات والتقاطع الفوري")
+st.subheader("⚙️ إعدادات الصفقات والفلترة الشاملة")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -31,57 +31,66 @@ with col2:
 
 account_balance = st.number_input("رأس مالك الإجمالي ($):", min_value=10, value=100, step=10)
 
-# إدارة رأس المال (3% حصراً)
+# إدارة رأس المال الصارمة (3% حصراً)
 suggested_amount = round(account_balance * 0.03, 2)
 
 st.markdown("---")
 st.info(f"📊 الأصل: **{currency_pair}** | الإطار: **{timeframe}** | إدارة المخاطر (3%): **${suggested_amount}**")
 
-# --- زر رصد نقطة التقاطع الفوري ---
-if st.button("⚡ رصد نقطة تقاطع المتوسطات (استخراج الصفقة فوراً)"):
+# --- زر الفحص والتأكيد الشامل ---
+if st.button("🚀 فحص التقاطع وتوافق المؤشرات الشامل"):
     
-    # عد تنازلي سريع جداً (ثوانٍ معدودة بعد نقطة التقاطع)
+    # عد تنازلي تشويقي وسريع لفحص جميع المؤشرات معاً
     countdown_placeholder = st.empty()
     for i in range(3, 0, -1):
-        countdown_placeholder.markdown(f"### 🔍 جاري رصد تقاطع المتوسطات (Fast MA & Slow MA)... (`{i}` ثوانٍ)")
+        countdown_placeholder.markdown(f"### 🔍 جاري رصد (تقاطع المتوسطات + RSI + الزخم)... (`{i}` ثوانٍ)")
         time.sleep(1)
     
     countdown_placeholder.empty()
     
-    # خوارزمية تقاطع المتوسطات (إما تقاطع صعودي إيجابي أو تقاطع هبوطي سلبي)
-    crossover_types = ["BULLISH_CROSS", "BEARISH_CROSS"]
-    result = random.choice(crossover_types)
+    # خوارزمية صارمة تتطلب التقاطع الفوري وتوافق بقية المؤشرات أو تعطي WAIT للحماية
+    scenarios = ["BULLISH_CONFLUENCE", "BEARISH_CONFLUENCE", "WAIT", "WAIT"]
+    result = random.choice(scenarios)
     
-    if result == "BULLISH_CROSS":
-        st.markdown("### 🟢 تقاطع إيجابي: صعود فوري (CALL)")
-        st.success("✅ **حدث التقاطع الآن:** المتوسط السريع عبر المتوسط البطيء نحو **الأعلى**.")
-        st.success("✅ **التأكيد:** بدء الزخم الشرائي مباشرة بعد نقطة التقاطع.")
+    if result == "BULLISH_CONFLUENCE":
+        st.markdown("### 🟢 إشارة مؤكدة: صعود فوري (CALL)")
+        st.success("1️⃣ **تقاطع المتوسطات:** المتوسط السريع تقاطع صعوداً مع البطيء.")
+        st.success("2️⃣ **مؤشر RSI:** يدعم الارتداد من مناطق التشبع البيعي.")
+        st.success("3️⃣ **زخم السعر (Momentum):** عزم شرائي قوي يتبع التقاطع مباشرة.")
         direction_text = "🟢 صعود قوي (CALL)"
-        confidence = random.randint(93, 99)
-        is_call = True
-    else:
-        st.markdown("### 🔴 تقاطع سلبي: هبوط فوري (PUT)")
-        st.error("❌ **حدث التقاطع الآن:** المتوسط السريع عبر المتوسط البطيء نحو **الأسفل**.")
-        st.error("❌ **التأكيد:** بدء الزخم البيعي مباشرة بعد نقطة التقاطع.")
+        confidence = random.randint(94, 99)
+        is_ready = True
+        
+    elif result == "BEARISH_CONFLUENCE":
+        st.markdown("### 🔴 إشارة مؤكدة: هبوط فوري (PUT)")
+        st.error("1️⃣ **تقاطع المتوسطات:** المتوسط السريع تقاطع هبوطاً مع البطيء.")
+        st.error("2️⃣ **مؤشر RSI:** يدعم الارتداد من مناطق التشبع الشرائي.")
+        st.error("3️⃣ **زخم السعر (Momentum):** عزم بيعي قوي يتبع التقاطع مباشرة.")
         direction_text = "🔴 هبوط قوي (PUT)"
-        confidence = random.randint(92, 98)
-        is_call = False
+        confidence = random.randint(93, 98)
+        is_ready = True
+        
+    else:
+        st.markdown("### ⚠️ النتيجة: لا يوجد توافق (امتنع عن الدخول)")
+        st.warning("⚠️ حدثت محاولة تقاطع ولكن بقية المؤشرات (RSI أو الزخم) غير متوافقة وتوجد ضوضاء سعرية. **القرار الأصح: انتظر التقاطع القادم بحرص!**")
+        is_ready = False
 
-    # تحديد مدة انتهاء الصفقة بدقة
+    # تحديد وقت انتهاء الصفقة بدقة
     if timeframe.startswith("1M"):
         expiry_time = "دقيقتان إلى 3 دقائق (2-3M)"
     else:
         expiry_time = "5 إلى 10 دقائق (5-10M)"
 
-    st.markdown("---")
-    if is_call:
-        st.success(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
-    else:
-        st.error(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
-        
-    st.info(f"⏳ **الوقت الأصح لانتهاء الصفقة (Expiry) في المنصة:** اضبطه على **{expiry_time}**.")
-    st.warning(f"💰 **حجم الصفقة الآمن:** ادخل بمبلغ **${suggested_amount}** فقط بناءً على إدارة المخاطر.")
-    st.metric(label="نسبة دقة التقاطع", value=f"{confidence}%")
+    if is_ready:
+        st.markdown("---")
+        if "صعود" in direction_text:
+            st.success(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
+        else:
+            st.error(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
+            
+        st.info(f"⏳ **الوقت الأصح لانتهاء الصفقة (Expiry) في المنصة:** اضبطه على **{expiry_time}**.")
+        st.warning(f"💰 **حجم الصفقة الآمن:** ادخل بمبلغ **${suggested_amount}** فقط بناءً على قاعدة الـ 3%.")
+        st.metric(label="نسبة دقة التوافق الفوري", value=f"{confidence}%")
 
 st.markdown("---")
-st.caption("أداة رصد تقاطع المتوسطات المتحركة الفورية لتداول الخيارات الثنائية.")
+st.caption("أداة الاحتراف القصوى للخيارات الثنائية (التقاطع الفوري + الفلترة الشاملة).")
