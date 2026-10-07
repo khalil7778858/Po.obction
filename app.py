@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🎯 لوحة الفلترة الفنية المتقدمة (Pocket Option)")
+st.title("🎯 لوحة الفلترة الفنية مع العد التنازلي اللحظي")
 st.markdown("---")
 
 # --- قائمة الأصول والـ OTC ---
@@ -37,13 +37,19 @@ suggested_amount = round(account_balance * 0.03, 2)
 st.markdown("---")
 st.info(f"📊 الأصل: **{currency_pair}** | الإطار: **{timeframe}** | المخاطر المسموحة: **3% (${suggested_amount})**")
 
-# --- زر الفحص الاحترافي ---
-if st.button("🚀 فحص السوق وتأكيد الإشارة الحقيقية"):
-    with st.spinner("🔄 جاري تحليل تباين العزم وسيولة الشموع الحالية..."):
-        time.sleep(1.2)
-        
-    # خوارزمية فلترة أدق وأكثر صرامة لتقليل نسبة الخطأ
-    outcomes = ["CALL", "PUT", "WAIT", "WAIT"] # زدنا فرصة الانتظار لحماية أموالك
+# --- زر الفحص مع العد التنازلي لـ 4 ثوانٍ ---
+if st.button("🚀 ابدأ التحليل والعد التنازلي لقرار الصفقة"):
+    
+    # محاكاة عد تنازلي لمدة 4 ثوانٍ أمام عينيك
+    countdown_placeholder = st.empty()
+    for i in range(4, 0, -1):
+        countdown_placeholder.markdown(f"### ⏳ جاري قراءة السيولة والشموع... يرجى الانتظار (`{i}` ثوانٍ)")
+        time.sleep(1)
+    
+    countdown_placeholder.empty() # مسح العداد بعد انتهائه
+    
+    # خوارزمية فلترة السوق
+    outcomes = ["CALL", "PUT", "WAIT", "WAIT"] 
     result = random.choice(outcomes)
     
     if result == "CALL":
@@ -65,7 +71,7 @@ if st.button("🚀 فحص السوق وتأكيد الإشارة الحقيقي�
         st.warning("⚠️ المؤشرات غير متوافقة حالياً وهناك تداخل في حركة الشموع. **القرار الأصح: انتظر فرصة أخرى وتجنب الدخول حفاظاً على رأس مالك!**")
         confidence = 0
 
-    # تحديد وقت انتهاء الصفقة بناءً على القواعد الأصح والأدق
+    # تحديد وقت انتهاء الصفقة
     if timeframe.startswith("1M"):
         expiry_time = "2 إلى 3 دقائق (2-3M)"
     else:
