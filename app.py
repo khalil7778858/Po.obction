@@ -12,24 +12,32 @@ st.set_page_config(
 st.title("🚀 أداة الاحتراف لتداول الخيارات الثنائية")
 st.markdown("---")
 
-# --- قائمة شاملة لجميع أزواج العملات وأزواج الـ OTC في بوكت أوبشن ---
+# --- قائمة شاملة لجميع أزواج العملات، الـ OTC، والأسهم الرقمية في بوكت أوبشن ---
 all_pairs = [
-    # الأزواج الرئيسية (Forex Majors)
-    "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "NZD/USD", "USD/CHF",
-    # الأزواج التقاطعية (Forex Crosses)
-    "EUR/GBP", "EUR/JPY", "GBP/JPY", "AUD/JPY", "EUR/AUD", "CAD/JPY",
-    # أزواج الـ OTC الشهيرة (التي تعمل دائماً)
+    # --- أولاً: أزواج العملات الـ OTC الأكثر شهرة (24/7) ---
     "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/CAD (OTC)", 
     "EUR/GBP (OTC)", "GBP/JPY (OTC)", "USD/CHF (OTC)", "NZD/USD (OTC)",
-    # العملات الرقمية والسلع
-    "BTC/USD (OTC)", "ETH/USD (OTC)", "Gold (الذهب)"
+    "AUD/USD (OTC)", "USD/CAD (OTC)", "EUR/JPY (OTC)", "AUD/JPY (OTC)",
+    "EUR/AUD (OTC)", "CAD/JPY (OTC)", "CHF/JPY (OTC)", "GBP/AUD (OTC)",
+    "EUR/CAD (OTC)", "GBP/CAD (OTC)", "NZD/JPY (OTC)", "EUR/NZD (OTC)",
+
+    # --- ثانياً: العملات الرقمية والسلع الـ OTC ---
+    "BTC/USD (OTC)", "ETH/USD (OTC)", "LTC/USD (OTC)", "XRP/USD (OTC)", 
+    "ADA/USD (OTC)", "SOL/USD (OTC)", "Gold / الذهب (OTC)", "Silver / الفضة (OTC)",
+
+    # --- ثالثاً: أسهم الشركات الكبرى الـ OTC (مثل تفلا، آبل، نتفليكس وغيرها) ---
+    "Apple OTC", "Tesla OTC", "Microsoft OTC", "Amazon OTC", "Netflix OTC", "Facebook OTC",
+
+    # --- رابعاً: الأزواج العادية (Forex - تعمل من الإثنين للجمعة) ---
+    "EUR/USD (العادي)", "GBP/USD (العادي)", "USD/JPY (العادي)", "AUD/USD (العادي)", 
+    "USD/CAD (العادي)", "NZD/USD (العادي)", "USD/CHF (العادي)", "EUR/GBP (العادي)"
 ]
 
 # --- قسم الإعدادات واختيار العملة والزمن ---
 st.subheader("⚙️ إعدادات الصفقات وتحليل السوق")
 
 currency_pair = st.selectbox(
-    "اختر زوج العملات أو الأصل:",
+    "اختر الأصل أو زوج الـ OTC المطلوب:",
     all_pairs
 )
 
