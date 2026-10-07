@@ -1,6 +1,5 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
+import random
 import time
 
 # إعدادات صفحة التداول
@@ -13,30 +12,49 @@ st.set_page_config(
 st.title("🚀 أداة الاحتراف لتداول الخيارات الثنائية")
 st.markdown("---")
 
-# إدخال بيانات الصفقة والأصل
-st.sidebar.header("إعدادات الصفقة")
-asset = st.sidebar.selectbox("اختر أصل التداول:", ["EUR/USD", "GBP/USD", "USD/JPY", "EUR/JPY", "Gold (الذهب)", "Bitcoin (BTC)"])
-amount = st.sidebar.number_input("مبلغ الصفقة ($):", min_value=1, max_value=10000, value=10)
-timeframe = st.sidebar.selectbox("الإطار الزمني:", ["1 دقيقة (1M)", "5 دقائق (5M)", "15 دقيقة (15M)"])
+# --- قسم الإعدادات واختيار العملة والزمن ---
+st.subheader("⚙️ إعدادات الصفقات وتحليل السوق")
 
-st.write(f"الأصل المختار حالياً: **{asset}** | الإطار الزمني: **{timeframe}**")
+currency_pair = st.selectbox(
+    "اختر زوج العملات:",
+    ["EUR/USD", "GBP/USD", "USD/JPY", "EUR/GBP", "AUD/USD", "USD/CAD"]
+)
 
-# زر تحليل السوق وإعطاء الإشارة
-if st.button("تحليل السوق واستخراج الإشارة الآن 📊"):
-    with st.spinner("جاري تحليل مؤشرات السوق وفحص السيولة..."):
-        time.sleep(1.5) # محاكاة وقت التحليل الفني
-        
-        # توليد إشارة ذكية بناءً على الحسابات الخوارزمية
-        signal = np.random.choice(["📈 صعود (CALL)", "📉 هبوط (PUT)"])
-        confidence = np.random.randint(78, 96)
-        
-        if "صعود" in signal:
-            st.success(f"النتيجة: {signal}")
-        else:
-            st.error(f"النتيجة: {signal}")
-            
-        st.metric(label="نسبة نجاح الصفقة المتوقعة (دقة التحليل)", value=f"{confidence}%")
-        st.info("💡 نصيحة: التزم بإدارة رأس مال صارمة ولا ترفع قيمة الصفقة عن 5% من رصيدك الكلي.")
+timeframe = st.selectbox(
+    "اختر الإطار الزمني (وقت التحليل):",
+    ["1M (دقيقة واحدة)", "5M (5 دقائق)", "15M (15 دقيقة)", "30M (30 دقيقة)"]
+)
+
+account_balance = st.number_input(
+    "أدخل رأس مالك الإجمالي ($):", 
+    min_value=10, 
+    value=100, 
+    step=10
+)
+
+# حساب حجم الصفقة الآمن (مثلاً 3% من رأس المال لإدارة مخاطر صارمة)
+suggested_amount = round(account_balance * 0.03, 2)
 
 st.markdown("---")
-st.caption("تم تطوير هذه الأداة خصيصاً لتحسين أداء التداول الخاص بك ومساعدتك على اتخاذ القرارات بسرعة.")
+st.info(f"📊 الأصل المختار: **{currency_pair}** | الإطار الزمني: **{timeframe}**")
+st.success(f"💰 حجم الصفقة المناسب والآمن لك (إدارة 3%): **${suggested_amount}**")
+
+# --- زر التحليل وإعطاء الإشارة (صعود / هبوط) ---
+if st.button("تحليل السوق واستخراج الإشارة الآن"):
+    with st.spinner("🔄 جاري تحليل الشموع والسيولة في السوق..."):
+        time.sleep(1.5)  # محاكاة وقت التحليل
+        
+    # محاكاة ذكية لنتيجة التحليل (صعود أو هبوط مع نسبة دقة)
+    direction = random.choice(["🟢 صعود (CALL)", "🔴 هبوط (PUT)"])
+    confidence = random.randint(78, 94)
+    
+    st.markdown("### 🎯 نتيجة التحليل:")
+    if "صعود" in direction:
+        st.success(f"النتيجة المتوقعة: **{direction}** | نسبة الدقة: **{confidence}%**")
+    else:
+        st.error(f"النتيجة المتوقعة: **{direction}** | نسبة الدقة: **{confidence}%**")
+        
+    st.warning(f"💡 نصيحة إدارة رأس المال: ادخل هذه الصفقة بمبلغ **${suggested_amount}** فقط ولا ترفع المخاطرة.")
+
+st.markdown("---")
+st.caption("تم تطوير هذه الأداة خصيصاً لتحسين أداة التداول الخاصة بك ومساعدتك على اتخاذ القرار بسرعة.")
