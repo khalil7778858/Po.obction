@@ -25,7 +25,7 @@ st.markdown("""
         border-radius: 10px;
         padding: 15px;
         text-align: center;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: bold;
         color: #60a5fa;
         margin: 15px 0;
@@ -34,12 +34,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ مستشار السكالبينغ (قمة/قاع 15 ثانية)")
-st.caption("نظام التنبيه المسبق والدخول الدقيق للشمعة رقم 21")
+st.caption("نظام التنبيه المسبق والدخول الدقيق للشمعة رقم 21 مع اختيار زوج العملات")
 
 st.divider()
 
 # المدخلات
-st.subheader("📌 معطيات التحليل")
+st.subheader("📌 معطيات التحليل واختيار السوق")
+
+# قائمة أزواج العملات في Pocket Option (تضم العملات العادية والـ OTC)
+currency_pairs = [
+    "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/USD (OTC)",
+    "USD/CAD (OTC)", "USD/CHF (OTC)", "NZD/USD (OTC)", "EUR/GBP (OTC)",
+    "EUR/JPY (OTC)", "GBP/JPY (OTC)", "AUD/CAD (OTC)", "AUD/JPY (OTC)",
+    "CAD/JPY (OTC)", "EUR/CAD (OTC)", "EUR/AUD (OTC)", "GBP/CAD (OTC)",
+    "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "USD/CHF"
+]
+
+selected_pair = st.selectbox("اختر زوج العملات المراد تداوله:", currency_pairs)
 
 trend_type = st.radio("نوع نقطة بداية العد (الشمعة 1):", ["من أعلى قمة (Top High)", "من أدنى قاع (Bottom Low)"], horizontal=True)
 
@@ -57,7 +68,7 @@ if st.button("🚀 بدء التحليل والعد التنازلي", use_conta
     
     # تحليلات الاستراتيجية
     if "ضعيفة" in candle_15_color:
-        st.warning("⚠️ السوق غير مستقر (شمعة دوجي/ضعيفة). يُنصح بالانتظار وعدم التداول الآن لحماية حسابك.")
+        st.warning(f"⚠️ السوق غير مستقر على {selected_pair} (شمعة دوجي/ضعيفة). يُنصح بالانتظار وعدم التداول الآن لحماية حسابك.")
     else:
         # تحديد اتجاه التوصية بناءً على الشمعة 15
         if "هبوط" in candle_15_color:
@@ -67,21 +78,20 @@ if st.button("🚀 بدء التحليل والعد التنازلي", use_conta
             direction = "CALL (صعود/أعلى) 🟢"
             color_code = "#10b981"
 
-        st.info("🔄 جاري مزامنة التوقيت وحساب زمن الوصول للشمعة رقم 21...")
+        st.info(f"🔄 جاري مزامنة التوقيت لزوج {selected_pair} وحساب زمن الوصول للشمعة رقم 21...")
         
         # إنشاء مكان للعد التنازلي
         timer_placeholder = st.empty()
         
         # العد التنازلي (90 ثانية - الوقت المتبقي لافتتاح الشمعة 21)
-        # 15s x 6 شموع = 90 ثانية
         total_seconds = 90 
         
         for remaining in range(total_seconds, 0, -1):
             timer_placeholder.markdown(f"""
             <div class="timer-box">
-                ⏱️ جهّز نفسك في Pocket Option<br>
+                📊 الزوج المحدد: <span style="color: #facc15;">{selected_pair}</span><br>
                 الصفقة القادمة: <span style="color: {color_code};">{direction}</span><br>
-                متبقي على نقطة الدخول: <span style="color: #f59e0b;">{remaining} ثانية</span>
+                ⏱️ متبقي على نقطة الدخول: <span style="color: #f59e0b;">{remaining} ثانية</span>
             </div>
             """, unsafe_allow_html=True)
             time.sleep(1)
@@ -90,10 +100,11 @@ if st.button("🚀 بدء التحليل والعد التنازلي", use_conta
         timer_placeholder.markdown(f"""
         <div class="status-card" style="background-color: {color_code}; color: white; font-size: 26px;">
             🚨 ادخل الصفقة الآن فوراً! 🚨<br><br>
+            الزوج: <b>{selected_pair}</b><br>
             الاتجاه: <b>{direction}</b><br>
             مدة الصفقة: <b>30 ثانية</b><br>
             حجم الصفقة المقترح (3%): <b>${trade_amount}</b>
         </div>
         """, unsafe_allow_html=True)
         
-        st.success("✅ تم إرسال إشارة الدخول. يرجى التنفيذ فوراً عند فتح الشمعة!")
+        st.success(f"✅ تم إرسال إشارة الدخول لزوج {selected_pair}. يرجى التنفيذ فوراً عند فتح الشمعة!")
