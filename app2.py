@@ -1,113 +1,99 @@
 import streamlit as st
-import time
 import hashlib
+import time
 
-# إعدادات صفحة التداول الاحترافية للتطبيق الثاني
-st.set_page_config(
-    page_title="Pocket Option 15s Scalper Pro",
-    page_icon="⚡",
-    layout="centered"
+# إعدادات الصفحة
+st.set_page_config(page_title="استراتيجية القمة والقاع - السكالبينغ", page_icon="⚡", layout="centered")
+
+# تنسيق الواجهة
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #0e1117;
+        color: #ffffff;
+    }
+    .status-card {
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin: 15px 0;
+        font-weight: bold;
+    }
+    .timer-box {
+        background-color: #1f2937;
+        border: 2px solid #3b82f6;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: #60a5fa;
+        margin: 15px 0;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("⚡ مستشار السكالبينغ (قمة/قاع 15 ثانية)")
+st.caption("نظام التنبيه المسبق والدخول الدقيق للشمعة رقم 21")
+
+st.divider()
+
+# المدخلات
+st.subheader("📌 معطيات التحليل")
+
+trend_type = st.radio("نوع نقطة بداية العد (الشمعة 1):", ["من أعلى قمة (Top High)", "من أدنى قاع (Bottom Low)"], horizontal=True)
+
+candle_15_color = st.selectbox(
+    "اتجاه/لون الشمعة رقم 15 المكتملة:",
+    ["هبوط (حمراء - Red)", "صعود (خضراء - Green)", "ضعيفة / غير واضحة (Doji)"]
 )
 
-st.title("⚡ تطبيق السكالبينغ السريع (استراتيجية الشمعة #15 ⬅️ #21)")
-st.markdown("---")
+balance = st.number_input("رأس المال في الحساب ($):", min_value=10.0, value=100.0, step=10.0)
 
-# --- قائمة الأصول المتاحة ---
-all_pairs = [
-    "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/CAD (OTC)", 
-    "EUR/GBP (OTC)", "GBP/JPY (OTC)", "USD/CHF (OTC)", "NZD/USD (OTC)",
-    "BTC/USD (OTC)", "ETH/USD (OTC)", "Gold / الذهب (OTC)", "Tesla OTC",
-    "EUR/USD (العادي)", "GBP/USD (العادي)"
-]
-
-# --- إعدادات المستخدم ---
-st.subheader("⚙️ إعدادات الصفقات والتحليل السريع (15 ثانية)")
-
-col1, col2 = st.columns(2)
-with col1:
-    currency_pair = st.selectbox("اختر الأصل:", all_pairs, key="pair_app2")
-with col2:
-    timeframe = st.selectbox("إطار الشمعة المخصص:", ["15s (15 ثانية)"], key="tf_app2")
-
-account_balance = st.number_input("رأس مالك الإجمالي ($):", min_value=10, value=100, step=10, key="bal_app2")
-
-# إدارة رأس المال الصارمة (3% حصراً)
-suggested_amount = round(account_balance * 0.03, 2)
-
-st.markdown("---")
-st.info(f"📊 الأصل: **{currency_pair}** | حجم الشمعة: **15 ثانية** | إدارة المخاطر (3%): **${suggested_amount}**")
-
-# --- زر فحص الشموع الـ 15 واستخراج الصفقة للشمعة #21 ---
-if st.button("🚀 قراءة الـ 15 شمعة السابقة وتحليل الشمعة #15 (3 ثوانٍ)"):
+if st.button("🚀 بدء التحليل والعد التنازلي", use_container_width=True):
     
-    # عد تنازلي سريع لمعالجة حركة الشموع السريعة
-    countdown_placeholder = st.empty()
-    for i in range(3, 0, -1):
-        countdown_placeholder.markdown(f"### ⚡ جاري مسح الـ 15 شمعة وقراءة لغلق الشمعة #15... (`{i}` ثوانٍ)")
-        time.sleep(1)
+    # حساب نسبة المخاطرة (3%)
+    trade_amount = round(balance * 0.03, 2)
     
-    countdown_placeholder.empty()
-    
-    # بصمة زمنية مستقرة بناءً على الشمعة الحالية
-    current_time_slot = int(time.time() // 15) # يتحدث الحساب كل 15 ثانية مع كُتل الشموع
-    seed_string = f"{currency_pair}-15s-{current_time_slot}"
-    hash_value = int(hashlib.md5(seed_string.encode()).hexdigest(), 16)
-    
-    # خوارزمية تحديد لون الشمعة رقم 15 وبناء القرار عليها
-    outcomes = ["GREEN_15", "RED_15", "WAIT"]
-    result = outcomes[hash_value % len(outcomes)]
-    
-    if result == "GREEN_15":
-        # قراءة الشموع الـ 15 السابقة
-        candles_structure = "🔴 🔴 🟢 🔴 🟢 🟢 🔴 🟢 🟢 🔴 🟢 🔴 🟢 🟢 🟢 (الشمعة #15: خضراء)"
-        st.markdown("### 📊 تحليل هيكل الشموع الـ 15 السابقة:")
-        st.info(candles_structure)
-        
-        st.markdown("### 🟢 نتيجة التحليل: الشمعة #15 خضراء ⬅️ قرار دخول صعود (CALL)")
-        st.success("✅ **حالة الشمعة #15:** أغلقت بجسم أخضر صاعد يعكس تفوق السيولة الشرائية.")
-        st.success("✅ **قاعدة التنفيذ:** بناءً على شرط الاستراتيجية، إشارة الدخول هي **صعود** عند حلول الشمعة رقم 21.")
-        direction_text = "🟢 صعود قوي (CALL)"
-        confidence = 98
-        expert_opinion = "📈 **رؤية الخبير:** غلق الشمعة #15 باللون الأخضر يعزز القوة الشرائية اللحظية. ادخل صفقة صعود مدتها 30 ثانية لتغطية الشمعة رقم 21 والدقيقة القادمة."
-        is_ready = True
-        
-    elif result == "RED_15":
-        # قراءة الشموع الـ 15 السابقة
-        candles_structure = "🟢 🟢 🔴 🟢 🔴 🔴 🟢 🔴 🔴 🟢 🔴 🟢 🔴 🔴 🔴 (الشمعة #15: حمراء)"
-        st.markdown("### 📊 تحليل هيكل الشموع الـ 15 السابقة:")
-        st.error(candles_structure)
-        
-        st.markdown("### 🔴 نتيجة التحليل: الشمعة #15 حمراء ⬅️ قرار دخول هبوط (PUT)")
-        st.error("❌ **حالة الشمعة #15:** أغلقت بجسم أحمر هابط يعكس ضغط البائعين.")
-        st.error("❌ **قاعدة التنفيذ:** بناءً على شرط الاستراتيجية، إشارة الدخول هي **هبوط** عند حلول الشمعة رقم 21.")
-        direction_text = "🔴 هبوط قوي (PUT)"
-        confidence = 98
-        expert_opinion = "📉 **رؤية الخبير:** غلق الشمعة #15 باللون الأحمر يؤكد استمرار الضغط البيعي السريع. ادخل صفقة هبوط مدتها 30 ثانية لضمان وقت الشمعة رقم 21."
-        is_ready = True
-        
+    # تحليلات الاستراتيجية
+    if "ضعيفة" in candle_15_color:
+        st.warning("⚠️ السوق غير مستقر (شمعة دوجي/ضعيفة). يُنصح بالانتظار وعدم التداول الآن لحماية حسابك.")
     else:
-        candles_structure = "🟢 🔴 🟢 🔴 🟢 🔴 🟢 🔴 🟢 🔴 🟢 🔴 🟢 🔴 ⚖️ (الشمعة #15: دوجي / غير واضحة)"
-        st.markdown("### 📊 تحليل هيكل الشموع الـ 15 السابقة:")
-        st.warning(candles_structure)
-        
-        st.markdown("### ⚠️ النتيجة: الشمعة #15 غير حاسمة (انتظر الفرصة التالية)")
-        st.warning("⚠️ الشمعة #15 أغلقت على شكل دوجي بدون لون حقيقي، التذبذب عالي جداً حالياً.")
-        expert_opinion = "🛡️ **رؤية الخبير:** تجنب الدخول عندما لا تكون الشمعة #15 واضحة المعالم، انتظر الدورة التالية للشموع."
-        is_ready = False
-
-    if is_ready:
-        st.markdown("---")
-        if "صعود" in direction_text:
-            st.success(f"🎯 **القرار التنفيذي للشمعة #21:** ادخل صفقة **{direction_text}** الآن!")
+        # تحديد اتجاه التوصية بناءً على الشمعة 15
+        if "هبوط" in candle_15_color:
+            direction = "PUT (هبوط/أسفل) 🔻"
+            color_code = "#ef4444"
         else:
-            st.error(f"🎯 **القرار التنفيذي للشمعة #21:** ادخل صفقة **{direction_text}** الآن!")
+            direction = "CALL (صعود/أعلى) 🟢"
+            color_code = "#10b981"
+
+        st.info("🔄 جاري مزامنة التوقيت وحساب زمن الوصول للشمعة رقم 21...")
+        
+        # إنشاء مكان للعد التنازلي
+        timer_placeholder = st.empty()
+        
+        # العد التنازلي (90 ثانية - الوقت المتبقي لافتتاح الشمعة 21)
+        # 15s x 6 شموع = 90 ثانية
+        total_seconds = 90 
+        
+        for remaining in range(total_seconds, 0, -1):
+            timer_placeholder.markdown(f"""
+            <div class="timer-box">
+                ⏱️ جهّز نفسك في Pocket Option<br>
+                الصفقة القادمة: <span style="color: {color_code};">{direction}</span><br>
+                متبقي على نقطة الدخول: <span style="color: #f59e0b;">{remaining} ثانية</span>
+            </div>
+            """, unsafe_allow_html=True)
+            time.sleep(1)
             
-        st.info("⏳ **الوقت المخصص لانتهاء الصفقة في منصة Pocket Option:** اضبط العقد حصراً على **30 ثانية (30s)**.")
-        st.warning(f"💰 **حجم الصفقة الآمن:** ادخل بمبلغ **${suggested_amount}** فقط بناءً على قاعدة إدارة المخاطر (3%).")
-        st.metric(label="نسبة دقة استراتيجية الشمعة #15", value=f"{confidence}%")
-
-    st.markdown("---")
-    st.info(expert_opinion)
-
-st.markdown("---")
-st.caption("تطبيق السكالبينغ المخصص لإنشاء وتتبع صفقات الـ 30 ثانية بناءً على الشموع السريعة.")
+        # إشارة الدخول المباشرة فور انتهاء العد التنازلي
+        timer_placeholder.markdown(f"""
+        <div class="status-card" style="background-color: {color_code}; color: white; font-size: 26px;">
+            🚨 ادخل الصفقة الآن فوراً! 🚨<br><br>
+            الاتجاه: <b>{direction}</b><br>
+            مدة الصفقة: <b>30 ثانية</b><br>
+            حجم الصفقة المقترح (3%): <b>${trade_amount}</b>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.success("✅ تم إرسال إشارة الدخول. يرجى التنفيذ فوراً عند فتح الشمعة!")
