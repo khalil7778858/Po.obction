@@ -1,8 +1,7 @@
 import streamlit as st
-import numpy as np
 
 # إعدادات الصفحة
-st.set_page_config(page_title="مستشار التحليل الفني الشامل - Pocket Option", page_icon="📊", layout="centered")
+st.set_page_config(page_title="مستشار المؤشرات الأربعة - Pocket Option", page_icon="📊", layout="centered")
 
 # تنسيق الواجهة
 st.markdown("""
@@ -22,12 +21,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 مستشار التحليل الفني المتقدم")
-st.caption("تحليل الشموع الخمس مع المؤشرات الأربعة: MACD, RSI, Momentum, و Moving Average")
+st.title("📊 مستشار المؤشرات الأربعة المتقدم")
+st.caption("يعتمد كلياً على تحليل وتوافق المؤشرات الأربعة (RSI, MACD, Momentum, Moving Average) لإعطاء التوصية")
 
 st.divider()
 
-# المدخلات
+# المدخلات الأساسية
 st.subheader("📌 معطيات السوق ورأس المال")
 
 currency_pairs = [
@@ -42,72 +41,65 @@ selected_pair = st.selectbox("اختر زوج العملات المراد تحل
 balance = st.number_input("رأس المال في الحساب ($):", min_value=10.0, value=100.0, step=10.0)
 
 st.write("---")
-st.subheader("🕯️ ادخل اتجاه آخر 5 شموع مكتملة (من الأقدم إلى الأحدث)")
+st.subheader("⚙️ ادخل قراءات المؤشرات الأربعة الحالية من شارت المنصة")
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2 = st.columns(2)
+
 with col1:
-    c1 = st.selectbox("شمعة 1", ["صعود (خضراء)", "هبوط (حمراء)"], key="c1")
-with col2:
-    c2 = st.selectbox("شمعة 2", ["صعود (خضراء)", "هبوط (حمراء)"], key="c2")
-with col3:
-    c3 = st.selectbox("شمعة 3", ["صعود (خضراء)", "هبوط (حمراء)"], key="c3")
-with col4:
-    c4 = st.selectbox("شمعة 4", ["صعود (خضراء)", "هبوط (حمراء)"], key="c4")
-with col5:
-    c5 = st.selectbox("شمعة 5", ["صعود (خضراء)", "هبوط (حمراء)"], key="c5")
+    rsi_val = st.slider("مؤشر القوة النسبية (RSI):", min_value=0, max_value=100, value=50)
+    macd_status = st.selectbox("مؤشر MACD:", ["إيجابي (Bullish) 🟢", "سلبي (Bearish) 🔴"])
 
-if st.button("🚀 تحليل المؤشرات الأربعة والشموع", use_container_width=True):
+with col2:
+    mom_status = st.selectbox("مؤشر الزخم (Momentum):", ["قوي صاعد 🚀", "قوي هابط 🔻", "متذبذب / محايد ⚖️"])
+    ma_status = st.selectbox("المتوسط المتحرك (MA):", ["فوق المتوسط (اتجاه صاعد) 🟢", "تحت المتوسط (اتجاه هابط) 🔴"])
+
+if st.button("🚀 تحليل المؤشرات وإعطاء القرار النهائي", use_container_width=True):
     # حساب إدارة المخاطر (3%)
     trade_amount = round(balance * 0.03, 2)
     
-    candles = [c1, c2, c3, c4, c5]
-    green_count = sum(1 for c in candles if "صعود" in c)
-    red_count = 5 - green_count
-    
-    # 1. حساب مؤشر القوة النسبية (RSI) بناءً على سلوك الشموع
-    rsi_val = 50 + (green_count * 8) - (red_count * 8)
-    rsi_val = max(20, min(80, rsi_val))
-    
-    # 2. مؤشر MACD
-    macd_status = "إيجابي (Bullish) 🟢" if green_count >= 3 else "سلبي (Bearish) 🔴"
-    
-    # 3. مؤشر الزخم (Momentum)
-    if green_count >= 4:
-        mom_status = "قوي صاعد 🚀"
-    elif red_count >= 4:
-        mom_status = "قوي هابط 🔻"
+    # عد الإشارات الإيجابية والسلبية بناءً على اختيار المؤشرات
+    bullish_count = 0
+    bearish_count = 0
+
+    # تقييم RSI
+    if rsi_val > 53 and rsi_val < 75:
+        bullish_count += 1
+    elif rsi_val < 47 and rsi_val > 25:
+        bearish_count += 1
+
+    # تقييم MACD
+    if "إيجابي" in macd_status:
+        bullish_count += 1
     else:
-        mom_status = "متذبذب / محايد ⚖️"
-        
-    # 4. المتوسط المتحرك (Moving Average - MA 5)
-    ma_status = "فوق المتوسط (اتجاه صاعد) 🟢" if green_count >= 3 else "تحت المتوسط (اتجاه هابط) 🔴"
-    
-    st.write("---")
-    st.subheader("📈 قراءات المؤشرات الأربعة الفنية")
-    
-    m1, m2 = st.columns(2)
-    with m1:
-        st.markdown(f"<div class='metric-box'><b>مؤشر RSI:</b><br>{rsi_val}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='metric-box'><b>مؤشر MACD:</b><br>{macd_status}</div>", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"<div class='metric-box'><b>الزخم (Momentum):</b><br>{mom_status}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='metric-box'><b>المتوسط المتحرك (MA):</b><br>{ma_status}</div>", unsafe_allow_html=True)
-        
+        bearish_count += 1
+
+    # تقييم Momentum
+    if "صاعد" in mom_status:
+        bullish_count += 1
+    elif "هابط" in mom_status:
+        bearish_count += 1
+
+    # تقييم Moving Average
+    if "صاعد" in ma_status:
+        bullish_count += 1
+    else:
+        bearish_count += 1
+
     st.write("---")
     
-    # اتخاذ القرار بناءً على توافق المؤشرات الأربعة نمط الشموع
-    if green_count >= 4 and rsi_val < 75:
+    # اتخاذ القرار النهائي بناءً على تطابق المؤشرات
+    if bullish_count >= 3 and rsi_val < 75:
         decision = "CALL (شراء / صعود) 🟢"
         bg_color = "#10b981"
-        advice = "تأكيد قوي من الشموع الخمسة والمؤشرات الأربعة على قوة الاتجاه الصاعد."
-    elif red_count >= 4 and rsi_val > 25:
+        advice = "إجماع قوي من المؤشرات الأربعة على قوة الاتجاه الصاعد."
+    elif bearish_count >= 3 and rsi_val > 25:
         decision = "PUT (بيع / هبوط) 🔻"
         bg_color = "#ef4444"
-        advice = "تأكيد قوي من الشموع الخمسة والمؤشرات الأربعة على قوة الاتجاه الهابط."
+        advice = "إجماع قوي من المؤشرات الأربعة على قوة الاتجاه الهابط."
     else:
         decision = "انتظار (WAIT / لا توجد صفقة) ⚠️"
         bg_color = "#f59e0b"
-        advice = "تضارب بين الشموع والمؤشرات الأربعة أو وجود تذبذب في السوق. يُفضل الانتظار لتجنب المخاطرة."
+        advice = "تضارب بين قراءات المؤشرات (لا توجد سيطرة واضحة). يُفضل الانتظار لحماية رأس المال."
 
     # عرض القرار النهائي
     st.markdown(f"""
@@ -119,4 +111,4 @@ if st.button("🚀 تحليل المؤشرات الأربعة والشموع", u
     st.info(f"💡 **تحليل الخبير:** {advice}")
     
     if "انتظار" not in decision:
-        st.success(f"🎯 **توقيت الدخول:** ادخل فوراً عند فتح الشمعة السادسة.\n\n💰 **حجم الصفقة المقترح (3%):** **${trade_amount}**")
+        st.success(f"🎯 **التوصية:** تنفيذ صفقة على زوج **{selected_pair}**.\n\n💰 **حجم الصفقة المقترح (3%):** **${trade_amount}**")
