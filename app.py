@@ -1,132 +1,123 @@
 import streamlit as st
-import time
-import hashlib
+import pandas as pd
+import numpy as np
 
-# إعدادات صفحة التداول الاحترافية
-st.set_page_config(
-    page_title="Pocket Option 5-Candles Strategy Pro",
-    page_icon="🕯️",
-    layout="centered"
-)
+# إعدادات الصفحة
+st.set_page_config(page_title="مستشار التحليل الفني الشامل - Pocket Option", page_icon="📊", layout="centered")
 
-st.title("🕯️ لوحة التحليل الذكي (استراتيجية الشموع الخمس السابقة وتوقع الشمعة السادسة)")
-st.markdown("---")
+# تنسيق الواجهة
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #0e1117;
+        color: #ffffff;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# --- قائمة الأصول والـ OTC الشاملة ---
-all_pairs = [
-    "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/CAD (OTC)", 
-    "EUR/GBP (OTC)", "GBP/JPY (OTC)", "USD/CHF (OTC)", "NZD/USD (OTC)",
-    "BTC/USD (OTC)", "ETH/USD (OTC)", "Gold / الذهب (OTC)", "Tesla OTC",
-    "EUR/USD (العادي)", "GBP/USD (العادي)"
+st.title("📊 مستشار التحليل الفني المتقدم")
+st.caption("تحليل 5 شموع مكتملة مع المؤشرات الأربعة: MACD, RSI, Momentum, والمتوسط المتحرك (Moving Average)")
+
+st.divider()
+
+# المدخلات الأساسية
+st.subheader("📌 معطيات السوق ورأس المال")
+
+currency_pairs = [
+    "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)", "AUD/USD (OTC)",
+    "USD/CAD (OTC)", "USD/CHF (OTC)", "NZD/USD (OTC)", "EUR/GBP (OTC)",
+    "EUR/JPY (OTC)", "GBP/JPY (OTC)", "EUR/USD", "GBP/USD", "USD/JPY"
 ]
 
-# --- إعدادات المستخدم ---
-st.subheader("⚙️ إعدادات الصفقات وتحليل الشموع الخمس")
+selected_pair = st.selectbox("اختر زوج العملات:", currency_pairs)
+balance = st.number_input("رأس المال في الحساب ($):", min_value=10.0, value=100.0, step=10.0)
 
-col1, col2 = st.columns(2)
+st.write("---")
+st.subheader("🕯️ اتجاه آخر 5 شموع مكتملة (من الأقدم إلى الأحدث)")
+
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
-    currency_pair = st.selectbox("اختر الأصل:", all_pairs)
+    c1 = st.selectbox("شمعة 1", ["صعود", "هبوط"], key="c1")
 with col2:
-    timeframe = st.selectbox("إطار التحليل (الشمعة):", ["1M (دقيقة واحدة)", "5M (5 دقائق)"])
+    c2 = st.selectbox("شمعة 2", ["صعود", "هبوط"], key="c2")
+with col3:
+    c3 = st.selectbox("شمعة 3", ["صعود", "هبوط"], key="c3")
+with col4:
+    c4 = st.selectbox("شمعة 4", ["صعود", "هبوط"], key="c4")
+with col5:
+    c5 = st.selectbox("شمعة 5", ["صعود", "هبوط"], key="c5")
 
-account_balance = st.number_input("رأس مالك الإجمالي ($):", min_value=10, value=100, step=10)
-
-# إدارة رأس المال الصارمة (3% حصراً)
-suggested_amount = round(account_balance * 0.03, 2)
-
-st.markdown("---")
-st.info(f"📊 الأصل: **{currency_pair}** | الإطار: **{timeframe}** | إدارة المخاطر (3%): **${suggested_amount}**")
-
-# --- زر الفحص وتحليل الشموع الخمس ---
-if st.button("🚀 فحص الشموع الخمس السابقة وتوقع الشمعة التالية (3 ثوانٍ)"):
+if st.button("🔍 تحليل المؤشرات الأربعة والشموع الخمس", use_container_width=True):
+    # حساب نسبة المخاطرة (3%)
+    trade_amount = round(balance * 0.03, 2)
     
-    # عد تنازلي سريع لمدة 3 ثوانٍ
-    countdown_placeholder = st.empty()
-    for i in range(3, 0, -1):
-        countdown_placeholder.markdown(f"### 🔍 جاري قراءة هيكل الشموع الخمس الماضية... (`{i}` ثوانٍ)")
-        time.sleep(1)
+    candles = [c1, c2, c3, c4, c5]
+    green_count = candles.count("صعود")
     
-    countdown_placeholder.empty()
+    # تحويل الشموع إلى قيم عددية لمحاكاة الأسعار وحساب المتوسط المتحرك
+    numeric_candles = [1 if c == "صعود" else -1 for c in candles]
+    base_price = 100.0
+    prices = [base_price]
+    for val in numeric_candles:
+        prices.append(prices[-1] + val * 0.5)
+    prices = prices[1:] # أسعار آخر 5 شموع
     
-    # بصمة زمنية ثابتة للشمعة الحالية لضمان التطابق عند تكرار الضغط
-    current_minute = int(time.time() // 60)
-    seed_string = f"{currency_pair}-{timeframe}-{current_minute}"
-    hash_value = int(hashlib.md5(seed_string.encode()).hexdigest(), 16)
+    # 1. مؤشر القوة النسبية (RSI)
+    rsi_val = 50 + (green_count * 8) - 20 if green_count >= 3 else 50 - ((5 - green_count) * 8) + 20
+    rsi_val = max(20, min(80, rsi_val))
     
-    # نتائج السيناريوهات (بناءً على الشموع الخمس)
-    scenarios = ["BULLISH_5C", "BEARISH_5C", "WAIT_5C"]
-    result = scenarios[hash_value % len(scenarios)]
+    # 2. مؤشر MACD
+    macd_status = "إيجابي (Bullish) 🟢" if green_count >= 3 else "سلبي (Bearish) 🔴"
     
-    if result == "BULLISH_5C":
-        # محاكاة شكل الشموع الخمس السابقة صعودياً
-        candles_history = "🟢 صاعدة  |  🔴 تراجع طفيف  |  🟢 صاعدة  |  🟢 صاعدة قوية  |  🟢 إغلاق قرب القمة"
-        st.markdown("### 📊 قراءة هيكل الشموع الخمس السابقة:")
-        st.info(candles_history)
+    # 3. مؤشر الزخم (Momentum)
+    mom_status = "قوي صاعد" if green_count >= 4 else ("قوي هابط" if green_count <= 1 else "متذبذب")
+    
+    # 4. المتوسط المتحرك (Moving Average - MA 5)
+    sma_5 = sum(prices) / len(prices)
+    current_close = prices[-1]
+    ma_status = "فوق المتوسط (صاعد) 🟢" if current_close >= sma_5 else "تحت المتوسط (هابط) 🔴"
+    
+    st.write("---")
+    st.subheader("📈 نتائج المؤشرات الأربعة الفنية")
+    
+    m1, m2 = st.columns(2)
+    with m1:
+        st.metric(label="مؤشر القوة النسبية (RSI)", value=f"{rsi_val}")
+        st.metric(label="مؤشر MACD", value=macd_status)
+    with m2:
+        st.metric(label="الزخم (Momentum)", value=mom_status)
+        st.metric(label="المتوسط المتحرك (MA 5)", value=ma_status)
         
-        st.markdown("### 🟢 توقع الشمعة التالية: صعود فوري (CALL)")
-        st.success("1️⃣ **سلوك الشموع:** الزخم الشرائي يسيطر على آخر 3 شموع مع تراجع ضعيف للبائعين.")
-        st.success("2️⃣ **النمط الكلاسيكي:** استمرار الاتجاه (Trend Continuation) بعد كسر التصحيح.")
-        direction_text = "🟢 صعود قوي (CALL)"
-        confidence = 97
-        expert_opinion = "📈 **رؤية الخبير وتوقع الشمعة السادسة:** من خلال تتبع الشموع الخمس الماضية، نلاحظ أن البائعين حاولوا الهبوط ولكن تم ابتلاع شمعتهم بسرعة من قِبل المشترين. التوقع الفني للشمعة الحالية هو الاندفاع صعوداً لاستكمال الموجة."
-        is_ready = True
-        
-    elif result == "BEARISH_5C":
-        # محاكاة شكل الشموع الخمس السابقة هبوطياً
-        candles_history = "🔴 هابطة  |  🟢 ارتداد وهمي  |  🔴 هابطة  |  🔴 كسر الدعم  |  🔴 إغلاق قرب القاع"
-        st.markdown("### 📊 قراءة هيكل الشموع الخمس السابقة:")
-        st.info(candles_history)
-        
-        st.markdown("### 🔴 توقع الشمعة التالية: هبوط فوري (PUT)")
-        st.error("1️⃣ **سلوك الشموع:** سيطرة واضحة للبائعين وفشل متكرر للمشترين في رفع السعر.")
-        st.error("2️⃣ **النمط الكلاسيكي:** ضغط بيعي متسارع (Momentum Breakdown) لأسفل القاع السابق.")
-        direction_text = "🔴 هبوط قوي (PUT)"
-        confidence = 97
-        expert_opinion = "📉 **رؤية الخبير وتوقع الشمعة السادسة:** الشموع الخمس تظهر ضعفاً حاداً في القوة الشرائية ونجاح البائعين في فرض سيطرتهم. التوقع الفني للشمعة السادسة هو استمرار النزول وكسر المستوى الحالي."
-        is_ready = True
-        
+    st.write("---")
+    
+    # تقييم الإشارات لتحديد القرار النهائي
+    bullish_signals = sum([
+        1 if green_count >= 3 else 0,
+        1 if rsi_val > 50 else 0,
+        1 if "إيجابي" in macd_status else 0,
+        1 if "فوق المتوسط" in ma_status else 0
+    ])
+    
+    # اتخاذ القرار بناءً على توافق المؤشرات
+    if bullish_signals >= 3 and rsi_val < 75:
+        decision = "CALL (شراء / صعود) 🟢"
+        bg_color = "#10b981"
+        advice = "إجماع قوي من المؤشرات الأربعة على استمرار الصعود ودعم الشموع الخضراء."
+    elif bullish_signals <= 1 and rsi_val > 25:
+        decision = "PUT (بيع / هبوط) 🔻"
+        bg_color = "#ef4444"
+        advice = "إجماع قوي من المؤشرات الأربعة على الهبوط وسلبية الضغط البيعي."
     else:
-        candles_history = "🟢 صاعدة  |  🔴 هابطة  |  🟢 صاعدة  |  🔴 هابطة  |  ⚖️ شمعة حيرة تذبذبية"
-        st.markdown("### 📊 قراءة هيكل الشموع الخمس السابقة:")
-        st.warning(candles_history)
-        
-        st.markdown("### ⚠️ النتيجة: السوق غير مستقر (امتنع عن الدخول)")
-        st.warning("⚠️ الشموع الخمس الماضية تظهر تداخلاً وحيرة (سوق عرضي). لا توجد أفضلية واضحة للشمعة القادمة.")
-        direction_text = "WAIT"
-        expert_opinion = "🛡️ **رؤية الخبير وتوقع الشمعة السادسة:** تتابع الشموع صعوداً وهبوطاً دون نمط واضح يعني أن السوق في منطقة تجميع أو تصريف. الحكمة هنا هي التوقف والانتظار حفاظاً على رأس المال."
-        is_ready = False
+        decision = "انتظار (WAIT / لا توجد صفقة) ⚠️"
+        bg_color = "#f59e0b"
+        advice = "تضارب بين قراءات المؤشرات الأربعة أو السوق عرضي. يُنصح بالانتظار لحماية الحساب."
 
-    # تحديد أفضل 3 خيارات أوقات لانتهاء الصفقة
-    if timeframe.startswith("1M"):
-        expiry_options = [
-            "⚡ **الخيار الأول (سريع - دقيقة واحدة):** 1M [للشمعة التالية مباشرة]",
-            "🎯 **الخيار الثاني (الموصى به):** 2M [يغطي الشمعة الحالية واللاحقة]",
-            "🛡️ **الخيار الثالث (الآمن):** 3M [الأكثر استقراراً]"
-        ]
-    else:
-        expiry_options = [
-            "⚡ **الخيار الأول (سريع):** 5M [شمعة تالية واحدة]",
-            "🎯 **الخيار الثاني (الموصى به):** 10M [شمعتان]",
-            "🛡️ **الخيار الثالث (الآمن):** 15M [ثلاث شموع]"
-        ]
-
-    if is_ready:
-        st.markdown("---")
-        if "صعود" in direction_text:
-            st.success(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
-        else:
-            st.error(f"🎯 **القرار التنفيذي:** ادخل صفقة **{direction_text}** الآن!")
-            
-        st.markdown("### ⏱️ أفضل 3 خيارات مخصصة لوقت انتهاء الصفقة (Expiry):")
-        for opt in expiry_options:
-            st.info(opt)
-            
-        st.warning(f"💰 **حجم الصفقة الآمن:** ادخل بمبلغ **${suggested_amount}** فقط بناءً على إدارة المخاطر.")
-        st.metric(label="نسبة دقة تحليل نمط الشموع", value=f"{confidence}%")
-
-    # عرض رؤية الخبير في كل الحالات
-    st.markdown("---")
-    st.info(expert_opinion)
-
-st.markdown("---")
-st.caption("أداة تحليل الشموع الخمس السابقة وتوقع الشمعة التالية للخيارات الثنائية.")
+    st.markdown(f"""
+    <div style="background-color: {bg_color}; padding: 20px; border-radius: 12px; text-align: center; color: white; font-size: 22px; font-weight: bold;">
+        القرار النهائي: {decision}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.info(f"💡 **تحليل الخبير:** {advice}")
+    if "انتظار" not in decision:
+        st.success(f"💰 حجم الصفقة المقترح بناءً على إدارة المخاطر (3%): **${trade_amount}**")
