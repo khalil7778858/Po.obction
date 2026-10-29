@@ -6,7 +6,7 @@ st.set_page_config(
     page_title="Pocket Option MACD Pro Confluence",
     page_icon="📈",
     layout="centered"
-)
+]
 
 st.title("📊 لوحة التحليل الفني مع مؤشر MACD Pro")
 st.markdown("---")
@@ -19,13 +19,22 @@ all_pairs = [
 
 selected_pair = st.selectbox("اختر الأصل للتداول:", all_pairs)
 
-# تثبيت النتيجة بناءً على دقيقة النظام الحالية لكي لا تتغير عند إعادة الضغط
-current_minute = int(time.time() // 120)  # يتغير كل دقيقتين فقط
-random.seed(current_minute)
+# حساب نافذة الدقيقتين الحالية (120 ثانية)
+block_time = 120
+current_time = time.time()
+current_block = int(current_time // block_time)
+seconds_passed = int(current_time % block_time)
+seconds_remaining = block_time - seconds_passed
+
+# تثبيت النتيجة بناءً على نافذة الوقت لكي لا تتغير خلال نفس الدقيقتين
+random.seed(current_block)
 
 if st.button("🚀 تحليل السوق الآن"):
-    # اختيار اتجاه ثابت بناءً على وقت الدقيقتين الحالي
+    # اختيار اتجاه ثابت طوال فترة الدقيقتين
     result = random.choice(["BULLISH_100", "BEARISH_100"])
+    
+    # عرض العداد التنازلي للوقت الباقي من الدقيقتين
+    st.info(, f"⏱️ الوقت الباقي على انتهاء هذه النافذة (الدقيقتين): **{seconds_remaining // 60} دقيقة و {seconds_remaining % 60} ثانية**")
     
     if result == "BULLISH_100":
         st.markdown("### 🟢 صفقة مؤكدة: صعود فوري")
@@ -34,7 +43,7 @@ if st.button("🚀 تحليل السوق الآن"):
         st.success("3️⃣ زخم السعر (Momentum): صاعد بقوة")
         st.success("4️⃣ مؤشر الماكد (MACD): تقاطع فوق الصفر")
         st.info("🔹 الاتجاه المتوقع: صعود قوي جداً (CALL)")
-        st.warning("⏳ المدة المقترحة للصفقة: خلال دقيقتين للانتهاء 📈")
+        st.warning("⏳ المدة المقترحة للصفقة: ضمن المدى الزمني الحالي المتبقي 📈")
         
     else:
         st.markdown("### 🔴 صفقة مؤكدة: هبوط فوري")
@@ -43,7 +52,7 @@ if st.button("🚀 تحليل السوق الآن"):
         st.error("3️⃣ زخم السعر (Momentum): هابط بقوة")
         st.error("4️⃣ مؤشر الماكد (MACD): تقاطع تحت الصفر")
         st.info("🔹 الاتجاه المتوقع: هبوط قوي جداً (PUT)")
-        st.warning("⏳ المدة المقترحة للصفقة: خلال دقيقتين للانتهاء 📉")
+        st.warning("⏳ المدة المقترحة للصفقة: ضمن المدى الزمني الحالي المتبقي 📉")
 
 st.markdown("---")
 st.markdown("⚠️ **إدارة المخاطر:** التزم بنسبة 3% كحد أقصى لكل صفقة، والتداول يحمل مخاطر عالية.")
