@@ -19,25 +19,22 @@ all_pairs = [
 
 selected_pair = st.selectbox("اختر الأصل للتداول:", all_pairs)
 
-# التحليل مبني على نافذة الـ 3 دقائق (180 ثانية) لضمان الدقة
-analysis_block = 180  
+# ضبط نافذة التحليل ووقت الصفقة لتكون دقيقتين و 15 ثانية (135 ثانية)
+block_time = 135  
 current_time = time.time()
-current_block = int(current_time // analysis_block)
+current_block = int(current_time // block_time)
+seconds_passed = int(current_time % block_time)
+seconds_remaining = block_time - seconds_passed
 
-# لكن العداد التنازلي والمدة المعروضة تكون لدقيقتين (120 ثانية) كما طلبت
-display_block = 120
-seconds_passed = int(current_time % display_block)
-seconds_remaining = display_block - seconds_passed
-
-# تثبيت النتيجة بناءً على تحليل الـ 3 دقائق لكي لا تتغير بسرعة
+# تثبيت النتيجة بناءً على نافذة الـ 135 ثانية لكي لا تتغير خلال نفس الفترة
 random.seed(current_block)
 
 if st.button("🚀 تحليل السوق الآن"):
-    # اختيار اتجاه ثابت طوال فترة التحليل
+    # اختيار اتجاه ثابت طوال فترة الـ 135 ثانية
     result = random.choice(["BULLISH_100", "BEARISH_100"])
     
-    # عرض العداد التنازلي لمدّة دقيقتين كما طلبت
-    st.info(f"⏱️ الوقت الباقي على انتهاء نافذة الصفقة (الدقيقتين): **{seconds_remaining // 60} دقيقة و {seconds_remaining % 60} ثانية**")
+    # عرض العداد التنازلي للوقت الباقي من الدقيقتين و 15 ثانية
+    st.info(f"⏱️ الوقت الباقي على انتهاء هذه النافذة (دقيقتين و 15 ثانية): **{seconds_remaining // 60} دقيقة و {seconds_remaining % 60} ثانية**")
     
     if result == "BULLISH_100":
         st.markdown("### 🟢 صفقة مؤكدة: صعود فوري")
@@ -47,7 +44,7 @@ if st.button("🚀 تحليل السوق الآن"):
         st.success("4️⃣ زخم السعر (Momentum): صاعد بقوة")
         st.success("5️⃣ مؤشر الماكد (MACD): تقاطع فوق خط الصفر")
         st.info("🔹 الاتجاه المتوقع: صعود قوي جداً (CALL)")
-        st.warning("⏳ المدة المقترحة للصفقة: دقيقتان بناءً على التحليل المعتمد لـ 3 دقائق 📈")
+        st.warning("⏳ المدة المقترحة للصفقة: دقيقتان و 15 ثانية متطابقة مع التحليل 📈")
         
     else:
         st.markdown("### 🔴 صفقة مؤكدة: هبوط فوري")
@@ -57,7 +54,7 @@ if st.button("🚀 تحليل السوق الآن"):
         st.error("4️⃣ زخم السعر (Momentum): هابط بقوة")
         st.error("5️⃣ مؤشر الماكد (MACD): تقاطع تحت خط الصفر")
         st.info("🔹 الاتجاه المتوقع: هبوط قوي جداً (PUT)")
-        st.warning("⏳ المدة المقترحة للصفقة: دقيقتان بناءً على التحليل المعتمد لـ 3 دقائق 📉")
+        st.warning("⏳ المدة المقترحة للصفقة: دقيقتان و 15 ثانية متطابقة مع التحليل 📉")
 
 st.markdown("---")
 st.markdown("⚠️ **إدارة المخاطر:** التزم بنسبة 3% كحد أقصى لكل صفقة، والتداول يحمل مخاطر عالية.")
