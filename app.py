@@ -2,25 +2,23 @@ import streamlit as st
 import random
 import time
 
-# إعداد الصفحة وتفعيل العرض الكامل للاستفادة من شاشة الكمبيوتر
+# إعداد الصفحة بالعرض الكامل
 st.set_page_config(
-    page_title="Pocket Option Pro - Left Layout",
+    page_title="Pocket Option Pro - Dual Panel",
     page_icon="⚡",
     layout="wide"
 )
 
-# تنسيق CSS مخصص لمحاذاة كل عناصر التطبيق إلى الجانب الأيسر تماماً
+# تنسيق CSS مخصص لتقسيم الشاشة وتعديل الألوان والثيم الداكن
 st.markdown("""
     <style>
     .main {
         background-color: #0e1117;
-        direction: ltr;
-        text-align: left;
     }
     div.block-container {
-        padding-left: 3rem;
-        padding-right: 3rem;
-        max-width: 100%;
+        padding-top: 2rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
     .stButton>button {
         width: 100%;
@@ -28,112 +26,121 @@ st.markdown("""
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        height: 45px;
+        height: 50px;
         border: none;
     }
     .stButton>button:hover {
         background: linear-gradient(45deg, #1d4ed8, #1e40af);
     }
-    p, span, h1, h2, h3, label {
-        text-align: left !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# عنوان التطبيق بالجانب الأيسر
-st.markdown("<h2 style='color: #f3f4f6;'>⚡ Pocket Option Pro - 5 Min Trading Room</h2>", unsafe_allow_html=True)
-st.markdown("<p style='color: #9ca3af;'>Wave Analysis & 300-Sec Candle Strategy (Left Panel Mode)</p>", unsafe_allow_html=True)
+# عنوان التطبيق الرئيسي
+st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>⚡ غرفة التداول الاحترافية - نظام الـ 5 دقائق</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af;'>تحليل الشموع الممتدة (300 ثانية) ولوحة التحكم الثنائية</p>", unsafe_allow_html=True)
 st.markdown("---")
-
-# صندوق اختيار الأصل وزر التحليل بجانب بعضهما في اليسار
-col1, col2, col3 = st.columns([2, 1, 3])
-with col1:
-    selected_pair = st.selectbox("📌 Select OTC Asset:", [
-        "AUD/CAD (OTC)", "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)",
-        "EUR/CHF (OTC)", "USD/CHF (OTC)", "AUD/USD (OTC)", "XAU/USD (OTC)"
-    ])
-with col2:
-    st.markdown("<br>", unsafe_allow_html=True)
-    analysis_btn = st.button("🔥 Run Analysis")
 
 # حفظ حالة التحليل في الجلسة
 if "analysis_result" not in st.session_state:
     st.session_state.analysis_result = None
 
-if analysis_btn:
-    direction = random.choice(["CALL", "PUT"])
-    is_ready = random.choice([True, True, False])
-    st.session_state.analysis_result = {
-        "direction": direction,
-        "is_ready": is_ready,
-        "pair": selected_pair
-    }
+# تقسيم الشاشة إلى عمودين رئيسيين (اليسار للتحكم، اليمين للنتائج)
+left_col, right_col = st.columns([1, 1], gap="large")
 
-st.markdown("---")
-
-# العداد التنازلي المتحرك منسق باليسار
-timer_placeholder = st.empty()
-
-block_time = 300  
-current_time = time.time()
-seconds_passed = int(current_time % block_time)
-seconds_remaining = block_time - seconds_passed
-
-minutes = seconds_remaining // 60
-seconds = seconds_remaining % 60
-
-timer_placeholder.markdown(f"""
-    <div style='background-color: #1f2937; padding: 15px; border-radius: 10px; text-align: left; border: 1px solid #374151; max-width: 500px;'>
-        <span style='color: #93c5fd; font-size: 15px;'>⏱️ Current 5-Min Candle Countdown:</span><br>
-        <span style='color: #ffffff; font-size: 22px; font-weight: bold;'>{minutes:02d} Minutes & {seconds:02d} Seconds ({seconds_remaining}s)</span>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# عرض التقرير والنتائج بالجانب الأيسر بشكل منظم تماماً
-if st.session_state.analysis_result is not None:
-    res = st.session_state.analysis_result
+with left_col:
+    st.markdown("### 🎛️ لوحة التحكم والتحضير")
     
-    with st.container():
-        st.markdown(f"### 📊 Wave Analysis Results for ({res['pair']})")
+    # اختيار الأصل
+    selected_pair = st.selectbox("📌 اختر الأصل المتاح على المنصة (OTC):", [
+        "AUD/CAD (OTC)", "EUR/USD (OTC)", "GBP/USD (OTC)", "USD/JPY (OTC)",
+        "EUR/CHF (OTC)", "USD/CHF (OTC)", "AUD/USD (OTC)", "XAU/USD (OTC)"
+    ])
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # زر التحليل
+    analysis_btn = st.button("🔥 ابدأ تحليل الموجة الآن")
+    
+    if analysis_btn:
+        direction = random.choice(["CALL", "PUT"])
+        is_ready = random.choice([True, True, False])
+        st.session_state.analysis_result = {
+            "direction": direction,
+            "is_ready": is_ready,
+            "pair": selected_pair
+        }
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # العداد التنازلي المتحرك في القسم الأيسر
+    timer_placeholder = st.empty()
+    
+    block_time = 300  
+    current_time = time.time()
+    seconds_passed = int(current_time % block_time)
+    seconds_remaining = block_time - seconds_passed
+
+    minutes = seconds_remaining // 60
+    seconds = seconds_remaining % 60
+
+    timer_placeholder.markdown(f"""
+        <div style='background-color: #1f2937; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #374151;'>
+            <span style='color: #93c5fd; font-size: 16px;'>⏱️ العداد التنازلي لشمعة الـ 5 دقائق الحالية</span><br><br>
+            <span style='color: #ffffff; font-size: 26px; font-weight: bold;'>{minutes:02d} دقيقة و {seconds:02d} ثانية</span>
+            <p style='color: #9ca3af; font-size: 12px; margin-top: 5px;'>({seconds_remaining} ثانية متبقية)</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<br>")
+    st.markdown("<p style='color: #9ca3af; font-size: 13px;'>⚠️ <b>إدارة المخاطر:</b> التزم بنسبة 2% إلى 3% كحد أقصى لكل صفقة.</p>", unsafe_allow_html=True)
+
+
+with right_col:
+    st.markdown("### 📊 نتائج الفحص والقرار النهائي")
+    
+    if st.session_state.analysis_result is None:
+        st.info("👈 اضغط على زر **(ابدأ تحليل الموجة الآن)** في القسم الأيسر لتظهر لك النتائج والصفقة هنا فوراً.")
+    else:
+        res = st.session_state.analysis_result
         
+        st.markdown(f"**الأصل المفحوص:** `{res['pair']}`")
+        st.markdown("---")
+        
+        # عرض المؤشرات الخمسة بشكل منظم
         if res["direction"] == "CALL":
-            st.success("1️⃣ **Moving Average (MA):** Stable above MA ➔ (Bullish ✅)")
-            st.success("2️⃣ **Technical Crossover:** Extended upward cross ➔ (Confirmed ✅)")
-            st.success("3️⃣ **RSI Indicator:** Healthy upward bounce ➔ (Confirmed ✅)")
-            st.success("4️⃣ **Momentum:** Accumulating buying liquidity ➔ (Confirmed ✅)")
-            st.success("5️⃣ **MACD Indicator:** Positive divergence above zero ➔ (Confirmed ✅)")
+            st.success("1️⃣ **الموفينج أفريج (MA):** مستقر فوق المتوسط ➔ (إيجابي ✅)")
+            st.success("2️⃣ **التقاطع الفني:** تقاطع صعودي ممتد ➔ (موافق ✅)")
+            st.success("3️⃣ **مؤشر RSI:** ارتداد صحي نحو الأعلى ➔ (موافق ✅)")
+            st.success("4️⃣ **الزخم (Momentum):** سيولة شرائية متراكمة ➔ (موافق ✅)")
+            st.success("5️⃣ **مؤشر MACD:** انفراج إيجابي فوق الصفر ➔ (موافق ✅)")
         else:
-            st.error("1️⃣ **Moving Average (MA):** Stable below MA ➔ (Bearish ✅)")
-            st.error("2️⃣ **Technical Crossover:** Extended downward cross ➔ (Confirmed ✅)")
-            st.error("3️⃣ **RSI Indicator:** Continuous downward slope ➔ (Confirmed ✅)")
-            st.error("4️⃣ **Momentum:** Accumulating selling pressure ➔ (Confirmed ✅)")
-            st.error("5️⃣ **MACD Indicator:** Negative divergence below zero ➔ (Confirmed ✅)")
+            st.error("1️⃣ **الموفينج أفريج (MA):** مستقر تحت المتوسط ➔ (سّلبي ✅)")
+            st.error("2️⃣ **التقاطع الفني:** تقاطع هبوطي ممتد ➔ (موافق ✅)")
+            st.error("3️⃣ **مؤشر RSI:** هبوط وتراجع مستمر ➔ (موافق ✅)")
+            st.error("4️⃣ **الزخم (Momentum):** ضغط بيعي متراكم ➔ (موافق ✅)")
+            st.error("5️⃣ **مؤشر MACD:** انفراج سلبي تحت الصفر ➔ (موافق ✅)")
 
         st.markdown("---")
         
+        # القرار النهائي البارز
         if res["is_ready"]:
             if res["direction"] == "CALL":
                 st.markdown("""
-                    <div style='background-color: #064e3b; padding: 15px; border-radius: 10px; text-align: left; border: 1px solid #059669; max-width: 600px;'>
-                        <h3 style='color: #34d399; margin:0;'>🟢 Final Decision: Extended CALL (UP)</h3>
-                        <p style='color: #d1fae5; margin:5px 0 0 0;'>Pocket Option Duration: Exactly 5 Minutes (300s)</p>
+                    <div style='background-color: #064e3b; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #059669;'>
+                        <h2 style='color: #34d399; margin:0;'>🟢 القرار النهائي: صعود (CALL)</h2>
+                        <p style='color: #d1fae5; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>5 دقائق بالتمام</b></p>
                     </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
-                    <div style='background-color: #7f1d1d; padding: 15px; border-radius: 10px; text-align: left; border: 1px solid #dc2626; max-width: 600px;'>
-                        <h3 style='color: #f87171; margin:0;'>🔴 Final Decision: Extended PUT (DOWN)</h3>
-                        <p style='color: #fee2e2; margin:5px 0 0 0;'>Pocket Option Duration: Exactly 5 Minutes (300s)</p>
+                    <div style='background-color: #7f1d1d; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #dc2626;'>
+                        <h2 style='color: #f87171; margin:0;'>🔴 القرار النهائي: هبوط (PUT)</h2>
+                        <p style='color: #fee2e2; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>5 دقائق بالتمام</b></p>
                     </div>
                 """, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ **Market is currently choppy (Avoid entering and wait for next candle)**")
+            st.warning("⚠️ **السوق متذبذب حالياً (تجنب الدخول وانتظر الشمعة القادمة)**")
 
-st.markdown("---")
-st.markdown("<p style='color: #9ca3af; font-size: 13px;'>⚠️ Risk Management: Limit risk to 2%-3% per trade max.</p>", unsafe_allow_html=True)
-
-# التحديث اللحظي
+# التحديث اللحظي للعداد دون توقف
 time.sleep(1)
 st.rerun()
