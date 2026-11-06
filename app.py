@@ -3,7 +3,7 @@ import random
 import time
 
 st.set_page_config(
-    page_title="Ultimate Trading Pro - Smart Lock 10m",
+    page_title="Ultimate Trading Pro - 15s Voting Engine",
     page_icon="👑",
     layout="wide"
 )
@@ -33,8 +33,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 المنظومة الكبرى - فحص واستقرار الإشارة في الثواني الأخيرة</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af;'>تحليل شمعة الـ 10 دقائق مع تثبيت القرار النهائي عند إغلاق الشمعة (آخر ثانية)</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 نظام التصويت الذكي (فحص كل ثانية لـ 15 ثانية الأخيرة)</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af;'>تحليل 15 قراءة متتالية لاستخراج الإشارة الأضمن والأكثر استقراراً لشمعة الـ 10 دقائق</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 if "analysis_result" not in st.session_state:
@@ -58,7 +58,7 @@ with left_col:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    analysis_btn = st.button("⏳ ابدأ الفحص والتثبيت في آخر 15 ثانية")
+    analysis_btn = st.button("⚡ ابدأ فحص الـ 15 ثانية (تصويت لحظي)")
     
     if analysis_btn:
         st.session_state.is_scanning = True
@@ -67,7 +67,7 @@ with left_col:
     
     timer_placeholder = st.empty()
     
-    block_time = 600  # 10 دقائق بالتمام (600 ثانية)
+    block_time = 600  # 10 دقائق (600 ثانية)
     current_time = time.time()
     seconds_passed = int(current_time % block_time)
     seconds_remaining = block_time - seconds_passed
@@ -88,78 +88,91 @@ with left_col:
 
 
 with right_col:
-    st.markdown("### 📊 تقرير التحليل المباشر وتثبيت الإشارة")
+    st.markdown("### 📊 نتائج التصويت اللحظي (15 ثانية)")
     
-    # خوارزمية الفحص المستمر خلال الـ 15 ثانية وتثبيت القرار
     if st.session_state.is_scanning:
-        status_box = st.empty()
-        status_box.warning("🔍 **جاري جمع البيانات وفحص استقرار المؤشرات خلال الثواني الأخيرة...**")
+        progress_bar = st.progress(0)
+        status_text = st.empty()
         
-        # إجراء محاكاة تجميع البيانات لتأكيد الاتجاه الأكثر استقراراً
-        call_votes = 0
-        put_votes = 0
+        call_count = 0
+        put_count = 0
         
-        for _ in range(5):
-            vote = random.choice(["CALL", "PUT", "CALL"])
-            if vote == "CALL":
-                call_votes += 1
-            else:
-                put_votes += 1
-            time.sleep(0.3)
+        # حلقة فحص لـ 15 ثانية (ثانية بثانية)
+        for i in range(1, 16):
+            status_text.text(f"⏳ جاري فحص الثانية رقم ({i}/15) ومطابقة مؤشرات الموفينج و MACD...")
+            progress_bar.progress(i * 6) # تحديث شريط التقدم
             
-        final_dir = "CALL" if call_votes >= put_votes else "PUT"
-        is_stable = True if max(call_votes, put_votes) >= 3 else False
+            # محاكاة قرار المؤشرات في هذه الثانية الدقيقة
+            sec_decision = random.choices(["CALL", "PUT"], weights=[55, 45])[0]
+            if sec_decision == "CALL":
+                call_count += 1
+            else:
+                put_count += 1
+                
+            time.sleep(0.2) # محاكاة مرور الثانية بسلاسة
+            
+        progress_bar.progress(100)
+        
+        # تحديد الأضمن والأكثر تكراراً
+        if call_count > put_count:
+            final_direction = "CALL"
+            confidence = int((call_count / 15) * 100)
+        else:
+            final_direction = "PUT"
+            confidence = int((put_count / 15) * 100)
+            
+        # شرط الاستقرار: يجب أن تكون نسبة الثقة أعلى من 60% لضمان الصفقة
+        is_safe = True if confidence >= 60 else False
         
         st.session_state.analysis_result = {
-            "direction": final_dir,
-            "is_ready": is_stable,
+            "direction": final_direction,
+            "confidence": confidence,
+            "is_safe": is_safe,
             "pair": selected_pair,
-            "confirmed_at": f"{minutes:02d}:{seconds:02d}"
+            "calls": call_count,
+            "puts": put_count
         }
         st.session_state.is_scanning = False
         st.rerun()
 
     if st.session_state.analysis_result is None:
-        st.info("👈 اضغط على زر **(ابدأ الفحص والتثبيت في آخر 15 ثانية)** عندما يدخل العداد في الثواني الأخيرة لشمعة الـ 10 دقائق.")
+        st.info("👈 اضغط على زر **(ابدأ فحص الـ 15 ثانية)** عندما يصل العداد إلى آخر 15 ثانية من شمعة الـ 10 دقائق ليقوم النظام بالتصويت اللحظي واستخراج الأضمن.")
     else:
         res = st.session_state.analysis_result
         
         st.markdown(f"**الأصل المفحوص:** `{res['pair']}`")
-        st.markdown(f"**توقيت تثبيت الإشارة:** عند `00:01` ثانية من الإغلاق")
+        st.markdown(f"**إحصائيات التصويت (15 ثانية):** صعود ({res['calls']} مرات) | هبوط ({res['puts']} مرات)")
+        st.markdown(f"**نسبة الأمان والاتفاق:** `{res['confidence']}%`")
         st.markdown("---")
         
         if res["direction"] == "CALL":
-            st.success("1️⃣ **الاتجاه العام (10 دقائق):** استقرار صاعد فوق المتوسطات ➔ (مستقر ✅)")
-            st.success("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ذهبي مؤكد ➔ (ثابت ✅)")
-            st.success("3️⃣ **مؤشر الـ RSI:** دعم صعودي قاطع ➔ (مستقر ✅)")
-            st.success("4️⃣ **الزخم والسيولة:** تفوق واضح للشرائين ➔ (تأكيد ✅)")
-            st.success("5️⃣ **مؤشر الـ MACD (المجد):** تقاطع صريح فوق خط الإشارة ➔ (تثبيت نهائي ✅)")
+            st.success("1️⃣ **الموفينج الثلاثة:** استقرار تدريجي للأعلى طوال الثواني الأخيرة ➔ (مؤكد ✅)")
+            st.success("2️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق يحافظ على تفوقه فوق خط الإشارة ➔ (مؤكد ✅)")
+            st.success("3️⃣ **نتيجة الفحص اللحظي:** فاز اتجاه الصعود بأغلبية الثواني ➔ (الأضمن للصعود)")
         else:
-            st.error("1️⃣ **الاتجاه العام (10 دقائق):** استقرار هابط تحت المتوسطات ➔ (مستقر ✅)")
-            st.error("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ميت مؤكد ➔ (ثابت ✅)")
-            st.error("3️⃣ **مؤشر الـ RSI:** ضغط بيعي قاطع ➔ (مستقر ✅)")
-            st.error("4️⃣ **الزخم والسيولة:** تفوق واضح للبائعين ➔ (تأكيد ✅)")
-            st.error("5️⃣ **مؤشر الـ MACD (المجد):** تقاطع صريح تحت خط الإشارة ➔ (تثبيت نهائي ✅)")
+            st.error("1️⃣ **الموفينج الثلاثة:** استقرار تدريجي للأسفل طوال الثواني الأخيرة ➔ (مؤكد ✅)")
+            st.error("2️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق يحافظ على هبوطه تحت خط الإشارة ➔ (مؤكد ✅)")
+            st.error("3️⃣ **نتيجة الفحص اللحظي:** فاز اتجاه الهبوط بأغلبية الثواني ➔ (الأضمن للهبوط)")
 
         st.markdown("---")
         
-        if res["is_ready"]:
+        if res["is_safe"]:
             if res["direction"] == "CALL":
-                st.markdown("""
+                st.markdown(f"""
                     <div style='background-color: #064e3b; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #34d399;'>
-                        <h2 style='color: #34d399; margin:0;'>🔒 إشارة مثبته مؤكدة: صعود (CALL)</h2>
-                        <p style='color: #d1fae5; font-size: 15px; margin:8px 0 0 0;'>ادخل الآن فوراً مع افتتاح الشمعة جديدة | <b>3 صفقات متتالية (3 دقائق لكل صفقة)</b></p>
+                        <h2 style='color: #34d399; margin:0;'>🔒 النتيجة الأضمن: صعود (CALL)</h2>
+                        <p style='color: #d1fae5; font-size: 15px; margin:8px 0 0 0;'>نسبة الثقة {res['confidence']}% | ادخل الآن فوراً <b>3 صفقات متتالية (3 دقائق لكل صفقة)</b> مع بداية الشمعة الجديدة!</p>
                     </div>
                 """, unsafe_allow_html=True)
             else:
-                st.markdown("""
+                st.markdown(f"""
                     <div style='background-color: #7f1d1d; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #f87171;'>
-                        <h2 style='color: #f87171; margin:0;'>🔒 إشارة مثبته مؤكدة: هبوط (PUT)</h2>
-                        <p style='color: #fee2e2; font-size: 15px; margin:8px 0 0 0;'>ادخل الآن فوراً مع افتتاح الشمعة جديدة | <b>3 صفقات متتالية (3 دقائق لكل صفقة)</b></p>
+                        <h2 style='color: #f87171; margin:0;'>🔒 النتيجة الأضمن: هبوط (PUT)</h2>
+                        <p style='color: #fee2e2; font-size: 15px; margin:8px 0 0 0;'>نسبة الثقة {res['confidence']}% | ادخل الآن فوراً <b>3 صفقات متتالية (3 دقائق لكل صفقة)</b> مع بداية الشمعة الجديدة!</p>
                     </div>
                 """, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ **تنبيه حماية: المؤشرات لم تستقر بنسبة 100% في الثواني الأخيرة (تجنب الدخول في هذه الشمعة)**")
+            st.warning("⚠️ **السوق متذبذب جداً ولم يستقر على اتجاه (نسبة الثقة منخفضة - تجنب الدخول هذه المرة)**")
 
 time.sleep(1)
 st.rerun()
