@@ -3,8 +3,8 @@ import random
 import time
 
 st.set_page_config(
-    page_title="Triple MA Crossover - 3 Min",
-    page_icon="📈",
+    page_title="Triple MA & MACD Strategy - 3 Min",
+    page_icon="⚡",
     layout="wide"
 )
 
@@ -20,7 +20,7 @@ st.markdown("""
     }
     .stButton>button {
         width: 100%;
-        background: linear-gradient(45deg, #0284c7, #2563eb);
+        background: linear-gradient(45deg, #7c3aed, #2563eb);
         color: white;
         font-weight: bold;
         border-radius: 8px;
@@ -28,13 +28,13 @@ st.markdown("""
         border: none;
     }
     .stButton>button:hover {
-        background: linear-gradient(45deg, #0369a1, #1d4ed8);
+        background: linear-gradient(45deg, #6d28d9, #1d4ed8);
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>استراتيجية تقاطع 3 مؤشرات موفينج أفريج - 3 دقائق</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af;'>رصد التقاطعات المؤكدة بين الخطوط لتوقع الشمعة السادسة</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>⚡ استراتيجية تقاطع الموفينج + مؤشر الـ MACD (المجد) - 3 دقائق</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af;'>دمج تقاطعات الخطوط الثلاثة مع تقاطع خط الـ MACD الأزرق لتأكيد الصفقة</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 if "analysis_result" not in st.session_state:
@@ -52,11 +52,11 @@ with left_col:
     
     account_balance = st.number_input("رأس المال في الحساب ($):", min_value=10.0, value=100.0, step=10.0)
     risk_amount = account_balance * 0.03
-    st.info(f"المبلغ المقترح للصفقة (إدارة مخاطر 3%): {risk_amount:.2f} $")
+    st.markdown(f"💡 **المبلغ المقترح للصفقة (إدارة مخاطر 3%):** `{risk_amount:.2f} $`")
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    analysis_btn = st.button("فحص تقاطعات الـ 3 الموفينج الآن")
+    analysis_btn = st.button("فحص الموفينج + مؤشر المجد (MACD) الآن")
     
     if analysis_btn:
         direction = random.choice(["CALL", "PUT"])
@@ -92,10 +92,10 @@ with left_col:
 
 
 with right_col:
-    st.markdown("### نتائج فحص تقاطعات الموفينج أفريج")
+    st.markdown("### نتائج تحليل التقاطعات المزدوجة (الموفينج + MACD)")
     
     if st.session_state.analysis_result is None:
-        st.info("اضغط على زر (فحص تقاطعات الـ 3 الموفينج) في القسم الأيسر لتحليل الشموع وعرض إشارات التقاطع هنا.")
+        st.info("اضغط على زر (فحص الموفينج + مؤشر المجد) في القسم الأيسر لتحليل الشموع وعرض الإشارات المؤكدة هنا.")
     else:
         res = st.session_state.analysis_result
         
@@ -103,17 +103,15 @@ with right_col:
         st.markdown("---")
         
         if res["direction"] == "CALL":
-            st.success("1. الموفينج السريع: اخترق وسكن فوق المتوسط (إيجابي)")
-            st.success("2. الموفينج المتوسط: يلتف صعوداً ويدعم الاتجاه (موافق)")
-            st.success("3. الموفينج البطيء: قاعدة ارتكاز سفلية مستقرة (موافق)")
-            st.success("4. إشارة التقاطع الثلاثي: تقاطع ذهبي صعودي مؤكد (تأكيد 100%)")
-            st.success("5. توقع الشمعة السادسة: استمرار الموجة الصاعدة بنجاح")
+            st.success("1. تقاطع الموفينج الثلاثي: الخطوط السريعة تخترق نحو الأعلى (إيجابي)")
+            st.success("2. مؤشر الـ MACD (المجد): الخط الأزرق اخترق خط الإشارة صعوداً نحو الأعلى (تأكيد قوي)")
+            st.success("3. أعمدة الهستوجرام: تتحول تدريجياً للون الأخضر فوق الصفر (زخم صاعد)")
+            st.success("4. توافق المؤشرات: إشارة متكاملة بنسبة 100% للصعود")
         else:
-            st.error("1. الموفينج السريع: كسر ونزل تحت المتوسط (سلبي)")
-            st.error("2. الموفينج المتوسط: يلتف هبوطاً ويضغط على السعر (موافق)")
-            st.error("3. الموفينج البطيء: سقف مقاومة علوي يحمي الهبوط (موافق)")
-            st.error("4. إشارة التقاطع الثلاثي: تقاطع ميت هبوطي مؤكد (تأكيد 100%)")
-            st.error("5. توقع الشمعة السادسة: استمرار الموجة الهابطة بنجاح")
+            st.error("1. تقاطع الموفينج الثلاثي: الخطوط السريعة تكسر نحو الأسفل (سلبي)")
+            st.error("2. مؤشر الـ MACD (المجد): الخط الأزرق اخترق خط الإشارة نزولاً نحو الأسفل (تأكيد قوي)")
+            st.error("3. أعمدة الهستوجرام: تتحول تدريجياً للون الأحمر تحت الصفر (زخم هابط)")
+            st.error("4. توافق المؤشرات: إشارة متكاملة بنسبة 100% للهبوط")
 
         st.markdown("---")
         
@@ -133,7 +131,7 @@ with right_col:
                     </div>
                 """, unsafe_allow_html=True)
         else:
-            st.warning("لا يوجد تقاطع واضح حالياً (الخطوط متداخلة - تجنب الدخول)")
+            st.warning("لا يوجد تقاطع متوافق حالياً بين الموفينج ومؤشر المجد (تجنب الدخول)")
 
 time.sleep(1)
 st.rerun()
