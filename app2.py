@@ -59,7 +59,7 @@ with left_col:
     # رأس المال لإدارة المخاطر
     account_balance = st.number_input("💰 رأس المال في الحساب ($):", min_value=10.0, value=100.0, step=10.0)
     risk_amount = account_balance * 0.03  # 3% كحد أقصى
-    st.info(推奨=f"💡 المبلغ المقترح للصفقة (إدارة مخاطر 3%): **{risk_amount:.2f} $**")
+    st.info(f"💡 المبلغ المقترح للصفقة (إدارة مخاطر 3%): **{risk_amount:.2f} $**")
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -104,48 +104,4 @@ with right_col:
     st.markdown("### 📊 نتائج فحص تقاطعات الموفينج أفريج")
     
     if st.session_state.analysis_result is None:
-        st.info("👈 اضغط على زر **(فحص تقاطعات الـ 3 الموفينج)** في القسم الأيسر لتحليل الشموع وعرض إشارات التقاطع هنا.")
-    else:
-        res = st.session_state.analysis_result
-        
-        st.markdown(f"**الأصل المفحوص:** `{res['pair']}`")
-        st.markdown("---")
-        
-        # تفاصيل تقاطعات المؤشرات الثلاثة
-        if res["direction"] == "CALL":
-            st.success("1️⃣ **الموفينج السريع (MA 5):** اخترق وسكن فوق المتوسط ➔ (إيجابي ✅)")
-            st.success("2️⃣ **الموفينج المتوسط (MA 10):** يلتف صعوداً ويدعم الاتجاه ➔ (موافق ✅)")
-            st.success("3️⃣ **الموفينج البطيء (MA 20):** قاعدة ارتكاز سفلية مستقرة ➔ (موافق ✅)")
-            st.success("4️⃣ **إشارة التقاطع الثلاثي:** تقاطع ذهبي صعودي مؤكد بين الخطوط ➔ (تأكيد 100% ✅)")
-            st.success("5️⃣ **توقع الشمعة السادسة:** استمرار الموجة الصاعدة بنجاح ➔ (صعود مؤكد)")
-        else:
-            st.error("1️⃣ **الموفينج السريع (MA 5):** كسر ونزل تحت المتوسط ➔ (سلبي ✅)")
-            st.error("2️⃣ **الموفينج المتوسط (MA 10):** يلتف هبوطاً ويضغط على السعر ➔ (موافق ✅)")
-            st.error("3️⃣ **الموفينج البطيء (MA 20):** سقف مقاومة علوي يحمي الهبوط ➔ (موافق ✅)")
-            st.error("4️⃣ **إشارة التقاطع الثلاثي:** تقاطع ميت هبوطي مؤكد بين الخطوط ➔ (تأكيد 100% ✅)")
-            st.error("5️⃣ **توقع الشمعة السادسة:** استمرار الموجة الهابطة بنجاح ➔ (هبوط مؤكد)")
-
-        st.markdown("---")
-        
-        # القرار النهائي البارز بمدة 3 دقائق بناءً على التقاطعات
-        if res["is_ready"]:
-            if res["direction"] == "CALL":
-                st.markdown("""
-                    <div style='background-color: #064e3b; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #059669;'>
-                        <h2 style='color: #34d399; margin:0;'>🟢 إشارة مؤكدة: صعود (CALL)</h2>
-                        <p style='color: #d1fae5; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>3 دقائق بالتمام (180 ثانية)</b></p>
-                    </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                    <div style='background-color: #7f1d1d; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #dc2626;'>
-                        <h2 style='color: #f87171; margin:0;'>🔴 إشارة مؤكدة: هبوط (PUT)</h2>
-                        <p style='color: #fee2e2; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>3 دقائق بالتمام (180 ثانية)</b></p>
-                    </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ **لا يوجد تقاطع واضح حالياً (الخطوط متداخلة - تجنب الدخول)**")
-
-# التحديث اللحظي للعداد دون توقف
-time.sleep(1)
-st.rerun()
+        st.info("👈 اضغط على زر **(فحص تقاطعات الـ 3 الموفين
