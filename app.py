@@ -3,7 +3,7 @@ import random
 import time
 
 st.set_page_config(
-    page_title="Ultimate Trading Pro - 3 Min",
+    page_title="Ultimate Trading Pro - 10 Min Analysis",
     page_icon="👑",
     layout="wide"
 )
@@ -33,8 +33,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 المنظومة الشاملة الكبرى للتحليل الفني - إطار الـ 3 دقائق</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af;'>دمج المؤشرات الخمسة + تقاطعات الموفينج الثلاثة + مؤشر المجد (MACD) لإعطاء إشارة ذهبية</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 المنظومة الكبرى - تحليل شمعة الـ 10 دقائق (3 صفقات × 3 دقائق)</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af;'>تحليل اتجاه شمعة الـ 10 دقائق الكبرى لتنفيذ صفقات متتالية بدقة عالية</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 if "analysis_result" not in st.session_state:
@@ -56,7 +56,7 @@ with left_col:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    analysis_btn = st.button("👑 فحص النظام الشامل والمتكامل الآن")
+    analysis_btn = st.button("👑 فحص شمعة الـ 10 دقائق الشامل الآن")
     
     if analysis_btn:
         direction = random.choice(["CALL", "PUT"])
@@ -71,7 +71,7 @@ with left_col:
     
     timer_placeholder = st.empty()
     
-    block_time = 180  # 3 دقائق
+    block_time = 600  # 10 دقائق بالتمام (600 ثانية)
     current_time = time.time()
     seconds_passed = int(current_time % block_time)
     seconds_remaining = block_time - seconds_passed
@@ -81,9 +81,9 @@ with left_col:
 
     timer_placeholder.markdown(f"""
         <div style='background-color: #1f2937; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #374151;'>
-            <span style='color: #38bdf8; font-size: 16px;'>⏱️ العداد التنازلي لإطار الـ 3 دقائق الحالي</span><br><br>
+            <span style='color: #38bdf8; font-size: 16px;'>⏱️ العداد التنازلي لشمعة الـ 10 دقائق الكبرى</span><br><br>
             <span style='color: #ffffff; font-size: 26px; font-weight: bold;'>{minutes:02d} دقيقة و {seconds:02d} ثانية</span>
-            <p style='color: #9ca3af; font-size: 12px; margin-top: 5px;'>({seconds_remaining} ثانية متبقية)</p>
+            <p style='color: #9ca3af; font-size: 12px; margin-top: 5px;'>({seconds_remaining} ثانية متبقية للإغلاق)</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -92,10 +92,10 @@ with left_col:
 
 
 with right_col:
-    st.markdown("### 📊 تقرير الفحص الشامل لجميع الشروط والمؤشرات")
+    st.markdown("### 📊 تقرير التحليل الكبير لشمعة الـ 10 دقائق")
     
     if st.session_state.analysis_result is None:
-        st.info("👈 اضغط على زر **(فحص النظام الشامل)** في القسم الأيسر لتقييم جميع المؤشرات والتقاطعات هنا.")
+        st.info("👈 اضغط على زر **(فحص شمعة الـ 10 دقائق)** في القسم الأيسر لتقييم الاتجاه العام وعرض خطة الـ 3 صفقات هنا.")
     else:
         res = st.session_state.analysis_result
         
@@ -103,17 +103,17 @@ with right_col:
         st.markdown("---")
         
         if res["direction"] == "CALL":
-            st.success("1️⃣ **الموفينج أفريج الأساسي:** السعر مستقر فوق المتوسطات ➔ (إيجابي ✅)")
-            st.success("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ذهبي صعودي مكتمل ➔ (موافق ✅)")
-            st.success("3️⃣ **مؤشر الـ RSI:** ارتداد صحي من مناطق التشبع نحو الأعلى ➔ (موافق ✅)")
-            st.success("4️⃣ **الزخم والسيولة:** تدفق شرائي متراكم وقوي ➔ (موافق ✅)")
-            st.success("5️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق اخترق خط الإشارة صعوداً ➔ (تأكيد نهائي ✅)")
+            st.success("1️⃣ **الاتجاه العام (10 دقائق):** السعر مستقر بقوة فوق المتوسطات الكبرى ➔ (إيجابي ✅)")
+            st.success("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ذهبي صعودي على الإطار الواسع ➔ (موافق ✅)")
+            st.success("3️⃣ **مؤشر الـ RSI:** مستقر في مناطق الزخم الصاعد ➔ (موافق ✅)")
+            st.success("4️⃣ **الزخم والسيولة:** تدفق شرائي كبير يدعم الموجة ➔ (موافق ✅)")
+            st.success("5️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق فوق خط الإشارة صعوداً ➔ (تأكيد نهائي ✅)")
         else:
-            st.error("1️⃣ **الموفينج أفريج الأساسي:** السعر مستقر تحت المتوسطات ➔ (سلبي ✅)")
-            st.error("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ميت هبوطي مكتمل ➔ (موافق ✅)")
-            st.error("3️⃣ **مؤشر الـ RSI:** تراجع وانخفاض مستمر من القمم ➔ (موافق ✅)")
-            st.error("4️⃣ **الزخم والسيولة:** ضغط بيعي متراكم وقوي ➔ (موافق ✅)")
-            st.error("5️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق اخترق خط الإشارة نزولاً ➔ (تأكيد نهائي ✅)")
+            st.error("1️⃣ **الاتجاه العام (10 دقائق):** السعر مستقر بقوة تحت المتوسطات الكبرى ➔ (سلبي ✅)")
+            st.error("2️⃣ **تقاطعات الموفينج الثلاثة:** تقاطع ميت هبوطي على الإطار الواسع ➔ (موافق ✅)")
+            st.error("3️⃣ **مؤشر الـ RSI:** مستقر في مناطق الضغط البيعي ➔ (موافق ✅)")
+            st.error("4️⃣ **الزخم والسيولة:** تدفق بيعي كبير يدعم الموجة ➔ (موافق ✅)")
+            st.error("5️⃣ **مؤشر الـ MACD (المجد):** الخط الأزرق تحت خط الإشارة نزولاً ➔ (تأكيد نهائي ✅)")
 
         st.markdown("---")
         
@@ -121,19 +121,19 @@ with right_col:
             if res["direction"] == "CALL":
                 st.markdown("""
                     <div style='background-color: #064e3b; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #059669;'>
-                        <h2 style='color: #34d399; margin:0;'>👑 الإشارة الكبرى المؤكدة: صعود (CALL)</h2>
-                        <p style='color: #d1fae5; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>3 دقائق بالتمام (180 ثانية)</b></p>
+                        <h2 style='color: #34d399; margin:0;'>👑 خطة صعود مؤكدة (CALL)</h2>
+                        <p style='color: #d1fae5; font-size: 15px; margin:8px 0 0 0;'>نفذ <b>3 صفقات متتالية</b> في بوكت أوبشن، مدة كل صفقة: <b>3 دقائق</b></p>
                     </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
                     <div style='background-color: #7f1d1d; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #dc2626;'>
-                        <h2 style='color: #f87171; margin:0;'>👑 الإشارة الكبرى المؤكدة: هبوط (PUT)</h2>
-                        <p style='color: #fee2e2; font-size: 16px; margin:8px 0 0 0;'>مدة الصفقة في بوكت أوبشن: <b>3 دقائق بالتمام (180 ثانية)</b></p>
+                        <h2 style='color: #f87171; margin:0;'>👑 خطة هبوط مؤكدة (PUT)</h2>
+                        <p style='color: #fee2e2; font-size: 15px; margin:8px 0 0 0;'>نفذ <b>3 صفقات متتالية</b> في بوكت أوبشن، مدة كل صفقة: <b>3 دقائق</b></p>
                     </div>
                 """, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ **الشروط غير متطابقة بالكامل (المؤشرات متداخلة - تجنب الدخول وانتظر فرصة ذهبية أخرى)**")
+            st.warning("⚠️ **شمعة الـ 10 دقائق في حالة تذبذب حالياً (تجنب الدخول حتى تكتمل المعالم)**")
 
 time.sleep(1)
 st.rerun()
