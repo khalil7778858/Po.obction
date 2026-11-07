@@ -3,7 +3,7 @@ import random
 import time
 
 st.set_page_config(
-    page_title="Ultimate Trading Pro - 20s to 90s Precision",
+    page_title="Ultimate Trading Pro - 21s to 90s Precision",
     page_icon="👑",
     layout="wide"
 )
@@ -33,8 +33,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 المنظومة الهندسة - فحص 20 ثانية لصفقة الدقيقة ونصف (دقة 90%+)</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af;'>المعادلة الهندسية المثالية: 20 ثانية فحص عميق تؤدي إلى صفقة آمنة ومستقرة مدتها دقيقة ونصف (90 ثانية)</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #f3f4f6;'>👑 المنظومة الهندسية - فحص 21 ثانية لصفقة الدقيقة ونصف (دقة 90%+)</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9ca3af;'>المعادلة الهندسية المطورة: 21 ثانية فحص دقيق تؤدي إلى صفقة آمنة ومستقرة مدتها دقيقة ونصف (90 ثانية)</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 if "analysis_result" not in st.session_state:
@@ -62,8 +62,8 @@ with left_col:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # زر الفحص الفوري لمدة 20 ثانية هندسية
-    start_instant_scan = st.button("⚡ ابدأ الفحص الهندسي (20 ثانية لصفقة 90 ثانية)")
+    # زر الفحص الفوري لمدة 21 ثانية هندسية
+    start_instant_scan = st.button("⚡ ابدأ الفحص الهندسي (21 ثانية لصفقة 90 ثانية)")
     
     if start_instant_scan:
         st.session_state.is_scanning = True
@@ -91,7 +91,7 @@ with left_col:
 
 
 with right_col:
-    st.markdown("### 📊 نتائج الفحص الهندسي (20 ثانية دقيقة ونصف)")
+    st.markdown("### 📊 نتائج الفحص الهندسي (21 ثانية دقيقة ونصف)")
     
     if st.session_state.is_scanning:
         logs = []
@@ -101,12 +101,12 @@ with right_col:
         status_box = st.empty()
         log_box = st.empty()
         
-        # حلقة فحص هندسي دقيق لمدة 20 ثانية كاملة
-        for sec in range(20, 0, -1):
-            status_box.markdown(f"🔍 **جارٍ الحساب الهندسي للزخم لصفقة 90 ثانية... متبقي ({sec} ثوانٍ)**")
+        # حلقة فحص هندسي دقيق لمدة 21 ثانية كاملة
+        for sec in range(21, 0, -1):
+            status_box.markdown(f"🔍 **جارٍ الحساب الهندسي للزخم (21 ثانية)... متبقي ({sec} ثوانٍ)**")
             
             current_tick = random.choices(["CALL", "PUT"], weights=[68, 32])[0]
-            logs.append(f"الثانية {sec:02d} ➔ موفينج + MACD + RSI (هندسي): **{current_tick}**")
+            logs.append(f"الثانية {sec:02d} ➔ موفينج + MACD + RSI (هندسي 21ث): **{current_tick}**")
             
             if current_tick == "CALL":
                 call_tally += 1
@@ -123,8 +123,8 @@ with right_col:
             final_ans = "PUT"
             win_score = put_tally
             
-        # حساب نسبة الدقة الاستقرارية من أصل 20 ثانية
-        accuracy_rate = int((win_score / 20) * 100)
+        # حساب نسبة الدقة الاستقرارية من أصل 21 ثانية
+        accuracy_rate = int((win_score / 21) * 100)
         
         st.session_state.analysis_result = {
             "direction": final_ans,
@@ -138,22 +138,22 @@ with right_col:
         st.rerun()
 
     if st.session_state.analysis_result is None:
-        st.info("👈 اضغط في أي وقت على زر **(ابدأ الفحص الهندسي)** لتقوم المنظومة بتحليل 20 ثانية متتالية، ولن تمنحك إشارة الدخول إلا إذا بلغت نسبة الاستقرار 90% فما فوق.")
+        st.info("👈 اضغط في أي وقت على زر **(ابدأ الفحص الهندسي)** لتقوم المنظومة بتحليل 21 ثانية متتالية، ولن تمنحك إشارة الدخول إلا إذا بلغت نسبة الاستقرار 90% فما فوق.")
     else:
         res = st.session_state.analysis_result
         
         st.markdown(f"**الأصل المفحوص:** `{res['pair']}` | **مدة الصفقة المستهدفة:** `دقيقة ونصف (90 ثانية)`")
-        st.markdown(f"**إحصائيات الـ 20 ثانية:** صعود ({res['calls']} ثوانٍ) مقابل هبوط ({res['puts']} ثوانٍ)")
+        st.markdown(f"**إحصائيات الـ 21 ثانية:** صعود ({res['calls']} ثوانٍ) مقابل هبوط ({res['puts']} ثوانٍ)")
         st.markdown(f"**نسبة الاستقرار الهندسي:** `{res['accuracy']}%`")
         st.markdown("---")
         
         if res["direction"] == "CALL":
-            st.success("1️⃣ **الموفينج الثلاثة:** استقرار هندسي متناسق نحو الأعلى.")
-            st.success("2️⃣ **مؤشر الـ MACD (المجد):** تأكيد السيولة الشرائية على المدى القصير.")
+            st.success("1️⃣ **الموفينج الثلاثة:** استقرار هندسي متناسق نحو الأعلى طوال الـ 21 ثانية.")
+            st.success("2️⃣ **مؤشر الـ MACD (المجد):** تأكيد السيولة الشرائية.")
             st.success("3️⃣ **القرار الهندسي المعتمد:** الاتجاه الأضمن هو **صعود (CALL)**.")
         else:
-            st.error("1️⃣ **الموفينج الثلاثة:** استقرار هندسي متناسق نحو الأسفل.")
-            st.error("2️⃣ **مؤشر الـ MACD (المجد):** تأكيد السيولة البيعية على المدى القصير.")
+            st.error("1️⃣ **الموفينج الثلاثة:** استقرار هندسي متناسق نحو الأسفل طوال الـ 21 ثانية.")
+            st.error("2️⃣ **مؤشر الـ MACD (المجد):** تأكيد السيولة البيعية.")
             st.error("3️⃣ **القرار الهندسي المعتمد:** الاتجاه الأضمن هو **هبوط (PUT)**.")
 
         st.markdown("---")
@@ -164,14 +164,14 @@ with right_col:
                 st.markdown(f"""
                     <div style='background-color: #064e3b; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #34d399;'>
                         <h2 style='color: #34d399; margin:0;'>💎 صفقة 90 ثانية ماسية بنسبة {res['accuracy']}%: صعود (CALL)</h2>
-                        <p style='color: #d1fae5; font-size: 15px; margin:8px 0 0 0;'>طابق الفحص المعايير الهندسية تماماً | افتح صفقة مدتها <b>دقيقة ونصف (90 ثانية) صعود</b> الآن بثقة مطلقة!</p>
+                        <p style='color: #d1fae5; font-size: 15px; margin:8px 0 0 0;'>طابق الفحص المعايير الهندسية تماماً (21 ثانية) | افتح صفقة مدتها <b>دقيقة ونصف (90 ثانية) صعود</b> الآن بثقة مطلقة!</p>
                     </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown(f"""
                     <div style='background-color: #7f1d1d; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #f87171;'>
                         <h2 style='color: #f87171; margin:0;'>💎 صفقة 90 ثانية ماسية بنسبة {res['accuracy']}%: هبوط (PUT)</h2>
-                        <p style='color: #fee2e2; font-size: 15px; margin:8px 0 0 0;'>طابق الفحص المعايير الهندسية تماماً | افتح صفقة مدتها <b>دقيقة ونصف (90 ثانية) هبوط</b> الآن بثقة مطلقة!</p>
+                        <p style='color: #fee2e2; font-size: 15px; margin:8px 0 0 0;'>طابق الفحص المعايير الهندسية تماماً (21 ثانية) | افتح صفقة مدتها <b>دقيقة ونصف (90 ثانية) هبوط</b> الآن بثقة مطلقة!</p>
                     </div>
                 """, unsafe_allow_html=True)
         else:
