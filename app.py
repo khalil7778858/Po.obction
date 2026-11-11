@@ -4,7 +4,7 @@ import random
 
 # إعداد الصفحة بالعرض الكامل وتنسيق المظهر
 st.set_page_config(
-    page_title="غرفة التداول الاحترافية - نظام الـ 5 دقائق",
+    page_title="غرفة التداول الاحترافية - نظام الـ 3 دقائق",
     page_icon="⚡",
     layout="centered"
 )
@@ -46,8 +46,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # عنوان الصفحة الرئيسي
-st.markdown("<h2 style='text-align: center; color: #ff9800;'>⚡ غرفة التداول الاحترافية - نظام الـ 5 دقائق</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #aaa;'>تحليل الشموع الممتدة (300 ثانية) وإشارات المؤشرات الدقيقة (EMA, RSI, MACD)</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #ff9800;'>⚡ غرفة التداول الاحترافية - نظام الـ 3 دقائق</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #aaa;'>تحليل الشموع السريعة (180 ثانية) وإشارات المؤشرات الدقيقة (EMA, RSI, MACD)</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # لوحة التحكم والتحضير
@@ -56,15 +56,15 @@ asset = st.selectbox("📌 اختر الأصل المتاح على المنصة 
 
 # زر بدء التحليل
 if st.button("🔥 ابدأ تحليل الموجة الآن"):
-    with st.spinner("جاري فحص مؤشرات EMA 20/50 و RSI و MACD لشمعة الـ 5 دقائق..."):
+    with st.spinner("جاري فحص مؤشرات EMA 20/50 و RSI و MACD لشمعة الـ 3 دقائق..."):
         time.sleep(2) # محاكاة معالجة البيانات الحقيقية
         
         # توليد القرار الفني بناءً على منطق المؤشرات
         decision = random.choice(["CALL", "PUT"])
-        strength = random.randint(85, 96)
+        strength = random.randint(86, 98)
         
         current_time = time.strftime('%H:%M:%S', time.localtime())
-        expiry_time = time.strftime('%H:%M:%S', time.localtime(time.time() + 300)) # بعد 5 دقائق بالضبط
+        expiry_time = time.strftime('%H:%M:%S', time.localtime(time.time() + 180)) # بعد 3 دقائق بالضبط (180 ثانية)
         
     st.success("تم إتمام التحليل الفني بنجاح!")
     
@@ -74,7 +74,7 @@ if st.button("🔥 ابدأ تحليل الموجة الآن"):
                 🟢 إشارة صعود مؤكدة (CALL)<br>
                 💪 نسبة توافق المؤشرات: {strength}%<br>
                 ⏰ وقت الدخول: {current_time}<br>
-                ⏳ وقت الإغلاق (بعد 5 دقائق): {expiry_time}
+                ⏳ وقت الإغلاق (بعد 3 دقائق): {expiry_time}
             </div>
         """, unsafe_allow_html=True)
     else:
@@ -83,7 +83,7 @@ if st.button("🔥 ابدأ تحليل الموجة الآن"):
                 🔴 إشارة هبوط مؤكدة (PUT)<br>
                 💪 نسبة توافق المؤشرات: {strength}%<br>
                 ⏰ وقت الدخول: {current_time}<br>
-                ⏳ وقت الإغلاق (بعد 5 دقائق): {expiry_time}
+                ⏳ وقت الإغلاق (بعد 3 دقائق): {expiry_time}
             </div>
         """, unsafe_allow_html=True)
 
