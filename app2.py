@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
-from datetime import datetime
 
 st.set_page_config(page_title="مستشار صفقات Quotex المباشر", page_icon="🎯", layout="centered")
 
@@ -19,7 +18,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🎯 مستشار صفقات Quotex المباشر")
-st.caption("يحلل السوق تلقائياً ويعطيك قرار الدخول المباشر")
+st.caption("يحلل السوق لحظياً ويعطيك قرار الدخول المباشر")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -31,7 +30,7 @@ with col2:
         "1m (دقيقة واحدة)", "5m (5 دقائق)", "15m (15 دقيقة)"
     ])
 
-@st.cache_data(ttl=20)
+@st.cache_data(ttl=10)
 def fetch_market_data(symbol, tf):
     base, quote = symbol.split("/")
     yahoo_symbol = f"{base}{quote}=X"
@@ -42,7 +41,7 @@ def fetch_market_data(symbol, tf):
     headers = {'User-Agent': 'Mozilla/5.0'}
     
     try:
-        res = requests.get(url, headers=headers, timeout=10).json()
+        res = requests.get(url, headers=headers, timeout=5).json()
         result = res['chart']['result'][0]
         timestamps = result['timestamp']
         quote_data = result['indicators']['quote'][0]
@@ -80,7 +79,8 @@ def calculate_indicators(df):
     
     return df
 
-if st.button("⚡ افحص السوق وأعطني الصفقة الآن"):
+# زر لتحديث البيانات يدوياً وإجبار التطبيق على جلب الجديد
+if st.button("⚡ تحديث وفحص السوق الآن"):
     st.cache_data.clear()
 
 df = fetch_market_data(pair, timeframe)
@@ -90,82 +90,83 @@ if df is not None and len(df) > 30:
     last = df.iloc[-1]
     prev = df.iloc[-2]
     
-    buy_score = 0
-    sell_score = 0
-    buy_reasons = []
-    sell_reasons = []
-    
-    if last['RSI'] <= 32:
-        buy_score += 35
-        buy_reasons.append(f"✅ تشبع بيعي قوي (RSI = {last['RSI']:.1f})")
-    elif last['RSI'] >= 68:
-        sell_score += 35
-        sell_reasons.append(f"✅ تشبع شرائي قوي (RSI = {last['RSI']:.1f})")
-    elif last['RSI'] < 45:
-        buy_score += 10
-    elif last['RSI'] > 55:
-        sell_score += 10
-
-    if last['EMA_9'] > last['EMA_21']:
-        buy_score += 25
-        buy_reasons.append("✅ اتجاه صاعد (EMA)")
+    # التحقق من أن القيم سليمة وليست NaN
+    if pd.isna(last['RSI']) or pd.isna(last['EMA_9']):
+        st.warning("⚠️ جاري مزامنة بيانات الشموع الحية، اضغط مرة أخرى على زر التحديث.")
     else:
-        sell_score += 25
-        sell_reasons.append("✅ اتجاه هابط (EMA)")
+        buy_score = 0
+        sell_score = 0
+        buy_reasons = []
+        sell_reasons = []
+        
+        if last['RSI'] <= 35:
+            buy_score += 35
+            buy_reasons.append(f"✅ تشبع بيعي (RSI = {last['RSI']:.1f})")
+        elif last['RSI'] >= 65:
+            sell_score += 35
+            sell_reasons.append(f"✅ تشبع شرائي (RSI = {last['RSI']:.1f})")
+        elif last['RSI'] < 48:
+            buy_score += 10
+        elif last['RSI'] > 52:
+            sell_score += 10
 
-    if last['close'] <= last['BB_Lower']:
-        buy_score += 25
-        buy_reasons.append("✅ ملامسة دعم البولينجر")
-    elif last['close'] >= last['BB_Upper']:
-        sell_score += 25
-        sell_reasons.append("✅ ملامسة مقاومة البولينجر")
+        if last['EMA_9'] > last['EMA_21']:
+            buy_score += 25
+            buy_reasons.append("✅ اتجاه صاعد (EMA 9 > 21)")
+        else:
+            sell_score += 25
+            sell_reasons.append("✅ اتجاه هابط (EMA 9 < 21)")
 
-    if last['MACD'] > last['Signal_Line']:
-        buy_score += 15
-        buy_reasons.append("✅ زخم شرائي (MACD)")
-    else:
-        sell_score += 15
-        sell_reasons.append("✅ زخم بيعي (MACD)")
+        if last['close'] <= last['BB_Lower']:
+            buy_score += 25
+            buy_reasons.append("✅ ملامسة دعم البولينجر السفلي")
+        elif last['close'] >= last['BB_Upper']:
+            sell_score += 25
+            sell_reasons.append("✅ ملامسة مقاومة البولينجر العلوي")
 
-    suggested_expiry = "دقيقة إلى دقيقتين" if "1m" in timeframe else "5 دقائق"
+        if last['MACD'] > last['Signal_Line']:
+            buy_score += 15
+            buy_reasons.append("✅ زخم إيجابي (MACD)")
+        else:
+            sell_score += 15
+            sell_reasons.append("✅ زخم سلبي (MACD)")
 
-    if buy_score >= 60 and buy_score > sell_score:
-        st.markdown(f"""
-        <div class="decision-card call-card">
-            <h1 style="margin:0; font-size: 28px;">🟢 ادخل صفقة صعود (CALL)</h1>
-            <h3 style="margin:10px 0;">الاحتمال: {buy_score}%</h3>
-            <p style="margin:0;">⏱️ المدة المقترحة: {suggested_expiry}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.subheader("🔍 الأسباب الفنية:")
-        for r in buy_reasons:
-            st.markdown(f'<div class="reason-item">{r}</div>', unsafe_allow_html=True)
+        suggested_expiry = "دقيقة إلى دقيقتين" if "1m" in timeframe else "5 دقائق"
 
-    elif sell_score >= 60 and sell_score > buy_score:
-        st.markdown(f"""
-        <div class="decision-card put-card">
-            <h1 style="margin:0; font-size: 28px;">🔴 ادخل صفقة هبوط (PUT)</h1>
-            <h3 style="margin:10px 0;">الاحتمال: {sell_score}%</h3>
-            <p style="margin:0;">⏱️ المدة المقترحة: {suggested_expiry}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.subheader("🔍 الأسباب الفنية:")
-        for r in sell_reasons:
-            st.markdown(f'<div class="reason-item">{r}</div>', unsafe_allow_html=True)
+        if buy_score >= 55 and buy_score > sell_score:
+            st.markdown(f"""
+            <div class="decision-card call-card">
+                <h1 style="margin:0; font-size: 26px;">🟢 صفقة صعود (CALL)</h1>
+                <h3 style="margin:10px 0;">الاحتمال: {buy_score}%</h3>
+                <p style="margin:0;">⏱️ المدة: {suggested_expiry}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            for r in buy_reasons:
+                st.markdown(f'<div class="reason-item">{r}</div>', unsafe_allow_html=True)
 
-    else:
-        st.markdown(f"""
-        <div class="decision-card wait-card">
-            <h1 style="margin:0; font-size: 24px;">⚪ لا تدخل الآن (تذبذب)</h1>
-            <p style="margin:10px 0;">صعود: {buy_score}% | هبوط: {sell_score}%</p>
-        </div>
-        """, unsafe_allow_html=True)
+        elif sell_score >= 55 and sell_score > buy_score:
+            st.markdown(f"""
+            <div class="decision-card put-card">
+                <h1 style="margin:0; font-size: 26px;">🔴 صفقة هبوط (PUT)</h1>
+                <h3 style="margin:10px 0;">الاحتمال: {sell_score}%</h3>
+                <p style="margin:0;">⏱️ المدة: {suggested_expiry}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            for r in sell_reasons:
+                st.markdown(f'<div class="reason-item">{r}</div>', unsafe_allow_html=True)
 
-    st.divider()
-    c1, c2, c3 = st.columns(3)
-    c1.metric("السعر الحالي", f"{last['close']:.5f}")
-    c2.metric("مؤشر RSI", f"{last['RSI']:.1f}")
-    c3.metric("الاتجاه", "صاعد ↗️" if last['EMA_9'] > last['EMA_21'] else "هابط ↘️")
+        else:
+            st.markdown(f"""
+            <div class="decision-card wait-card">
+                <h1 style="margin:0; font-size: 24px;">⚪ السوق متذبذب (انتظر)</h1>
+                <p style="margin:10px 0;">صعود: {buy_score}% | هبوط: {sell_score}%</p>
+            </div>
+            """, unsafe_allow_html=True)
 
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("السعر الحالي", f"{last['close']:.5f}")
+        c2.metric("مؤشر RSI", f"{last['RSI']:.1f}")
+        c3.metric("الاتجاه", "صاعد ↗️" if last['EMA_9'] > last['EMA_21'] else "هابط ↘️")
 else:
-    st.error("⚠️ السوق مغلق حالياً (عطلة نهاية الأسبوع). جرب أيام العمل من الإثنين للجمعة.")
+    st.error("⚠️ جاري جلب الشموع الحية.. تأكد من اتصال الإنترنت أو جرب زوجاً آخر.")
