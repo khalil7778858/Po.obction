@@ -1,91 +1,130 @@
-import streamlit as st
 import time
-import random
+import os
+import mss
+import numpy as np
 
-# إعداد الصفحة بالعرض الكامل وتنسيق المظهر
-st.set_page_config(
-    page_title="غرفة التداول الاحترافية - نظام الـ 3 دقائق",
-    page_icon="⚡",
-    layout="centered"
-)
+try:
+    from colorama import init, Fore, Style
+    init(autoreset=True)
+    HAS_COLOR = True
+except ImportError:
+    HAS_COLOR = False
 
-# تنسيق الألوان والتصميم الداكن المخصص
-st.markdown("""
-    <style>
-    .main {
-        background-color: #0e1117;
-        color: #ffffff;
-    }
-    .stButton>button {
-        width: 100%;
-        background-color: #2e7d32;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        height: 50px;
-    }
-    .signal-box {
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        margin-top: 20px;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .call-signal {
-        background-color: #1b5e20;
-        border: 2px solid #4caf50;
-        color: #e8f5e9;
-    }
-    .put-signal {
-        background-color: #b71c1c;
-        border: 2px solid #f44336;
-        color: #ffebee;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# إحداثيات منطقة الشارت على الشاشة
+CHART_AREA = {"top": 200, "left": 250, "width": 600, "height": 350}
 
-# عنوان الصفحة الرئيسي
-st.markdown("<h2 style='text-align: center; color: #ff9800;'>⚡ غرفة التداول الاحترافية - نظام الـ 3 دقائق</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #aaa;'>تحليل الشموع السريعة (180 ثانية) وإشارات المؤشرات الدقيقة (EMA, RSI, MACD)</p>", unsafe_allow_html=True)
-st.markdown("---")
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-# لوحة التحكم والتحضير
-st.markdown("### 🎛️ لوحة التحكم والتحضير")
-asset = st.selectbox("📌 اختر الأصل المتاح على المنصة (OTC):", ["AUD/CAD (OTC)", "EUR/USD (OTC)", "GBP/USD (OTC)", "EUR/GBP (OTC)"])
+def calculate_rsi(prices, period=14):
+    """حساب مؤشر القوة النسبية RSI بدقة"""
+    if len(prices) < period + 1:
+        return 50.0
+    deltas = np.diff(prices)
+    seed = deltas[:period]
+    up = seed[seed >= 0].sum() / period
+    down = -seed[seed < 0].sum() / period
+    if down == 0:
+        return 100.0
+    rs = up / down
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    return rsi
 
-# زر بدء التحليل
-if st.button("🔥 ابدأ تحليل الموجة الآن"):
-    with st.spinner("جاري فحص مؤشرات EMA 20/50 و RSI و MACD لشمعة الـ 3 دقائق..."):
-        time.sleep(2) # محاكاة معالجة البيانات الحقيقية
-        
-        # توليد القرار الفني بناءً على منطق المؤشرات
-        decision = random.choice(["CALL", "PUT"])
-        strength = random.randint(86, 98)
-        
-        current_time = time.strftime('%H:%M:%S', time.localtime())
-        expiry_time = time.strftime('%H:%M:%S', time.localtime(time.time() + 180)) # بعد 3 دقائق بالضبط (180 ثانية)
-        
-    st.success("تم إتمام التحليل الفني بنجاح!")
+def calculate_alligator(prices):
+    """
+    محاكاة خطوط مؤشر Alligator الثلاثة بناءً على سلاسل الأسعار:
+    1. الشفاه (Lips - فترة قصيرة)
+    2. الأسنان (Teeth - فترة متوسطة)
+    3. الفكين (Jaws - فترة طويلة)
+    """
+    if len(prices) < 13:
+        return prices[-1], prices[-1], prices[-1]
     
-    if decision == "CALL":
-        st.markdown(f"""
-            <div class='signal-box call-signal'>
-                🟢 إشارة صعود مؤكدة (CALL)<br>
-                💪 نسبة توافق المؤشرات: {strength}%<br>
-                ⏰ وقت الدخول: {current_time}<br>
-                ⏳ وقت الإغلاق (بعد 3 دقائق): {expiry_time}
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-            <div class='signal-box put-signal'>
-                🔴 إشارة هبوط مؤكدة (PUT)<br>
-                💪 نسبة توافق المؤشرات: {strength}%<br>
-                ⏰ وقت الدخول: {current_time}<br>
-                ⏳ وقت الإغلاق (بعد 3 دقائق): {expiry_time}
-            </div>
-        """, unsafe_allow_html=True)
+    lips = np.mean(prices[-3:])   # خط الشفاه (أسرع حركة)
+    teeth = np.mean(prices[-8:])  # خط الأسنان
+    jaws = np.mean(prices[-13:])  # خط الفكين (أبطأ حركة)
+    
+    return lips, teeth, jaws
 
-st.markdown("---")
-st.markdown("<p style='text-align: center; font-size: 12px; color: #666;'>نظام تحليل الشموع الذكي - متوافق مع منصة IQ Option</p>", unsafe_allow_html=True)
+def run_alligator_analyzer():
+    print("جارٍ تشغيل محلل مؤشر Alligator والمؤشرات الفنية...")
+    price_history = []
+    
+    with mss.mss() as sct:
+        while True:
+            try:
+                # التقاط الشارت من الذاكرة بسرعة ودون حفظ صور
+                img = np.array(sct.grab(CHART_AREA))
+                
+                green_channel = img[:, :, 1]
+                red_channel = img[:, :, 2]
+                
+                green_intensity = np.mean(green_channel)
+                red_intensity = np.mean(red_channel)
+                
+                # استنباط السعر اللحظي بناءً على حركة الألوان والشمعة
+                current_price = 100 + (green_intensity - red_intensity) * 0.1
+                price_history.append(current_price)
+                
+                if len(price_history) > 25:
+                    price_history.pop(0)
+                
+                # حساب المؤشرات
+                rsi_val = calculate_rsi(np.array(price_history))
+                lips, teeth, jaws = calculate_alligator(np.array(price_history))
+                
+                clear_screen()
+                print("==================================================")
+                print("    محلل تقاطع Alligator + RSI (خيارات ثنائية)     ")
+                print("==================================================")
+                print(f"مؤشر RSI (14)       : {rsi_val:.2f}")
+                print(f"أليغاتور - الشفاه (Lips) : {lips:.2f}")
+                print(f"أليغاتور - الأسنان (Teeth): {teeth:.2f}")
+                print(f"أليغاتور - الفكين (Jaws) : {jaws:.2f}")
+                print("--------------------------------------------------")
+                
+                # منطق التقاطع المؤكد لـ Alligator مع تصفية الـ RSI (بدون عشوائية)
+                # تقاطع صعودي: الشفاه أعلى الأسنان، والأسنان أعلى الفكين
+                if lips > teeth and teeth > jaws and rsi_val < 65:
+                    signal = "شراء / صعود (CALL) 🟢"
+                    duration = "3 دقائق (استمرار الزخم الصعودي للأليغاتور)"
+                    reason = "تقاطع إيجابي مؤكد لخطوط الأليغاتور (الفم منفتح صعوداً) مع دعم من الـ RSI."
+                
+                # تقاطع هبوطي: الشفاه أسفل الأسنان، والأسنان أسفل الفكين
+                elif lips < teeth and teeth < jaws and rsi_val > 35:
+                    signal = "بيع / هبوط (PUT) 🔴"
+                    duration = "3 دقائق (استمرار الهبوط المسيطر)"
+                    reason = "تقاطع سلبي مؤكد لخطوط الأليغاتور (الفم منفتح هبوطاً) مع ضغط بيعي."
+                
+                # حالات التشبع القوية للارتداد السريع
+                elif rsi_val <= 30:
+                    signal = "شراء عكسي (CALL - ارتداد) 🟢"
+                    duration = "دقيقتان (2 دقيقة)"
+                    reason = "تشبع بيعي حاد على مؤشر الـ RSI، متوقع ارتداد فوري من الدعم."
+                elif rsi_val >= 70:
+                    signal = "بيع عكسي (PUT - ارتداد) 🔴"
+                    duration = "دقيقتان (2 دقيقة)"
+                    reason = "تشبع شرائي حاد على مؤشر الـ RSI، متوقع جني أرباح وهبوط."
+                else:
+                    signal = "انتظار (تداخل خطوط التمساح) 🟡"
+                    duration = "غير محدد"
+                    reason = "خطوط الأليغاتور متداخلة (التمساح نائم)، لا توجد صفقة وامنة حالياً."
+
+                print(f"القرار الفني: {signal}")
+                print(f"مدة الصفقة المقترحة: {duration}")
+                print(f"السبب الفني: {reason}")
+                print("==================================================")
+                print("اضغط Ctrl+C للإيقاف.")
+                
+                # التحديث كل 3 ثوانٍ
+                time.sleep(3)
+                
+            except KeyboardInterrupt:
+                print("\nتم إيقاف البرنامج. بالتوفيق في تداولاتك!")
+                break
+            except Exception as e:
+                print(f"حدث خطأ بسيط: {e}")
+                time.sleep(3)
+
+if __name__ == "__main__":
+    run_alligator_analyzer()
