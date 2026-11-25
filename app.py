@@ -1,182 +1,137 @@
-import streamlit as st
-from PIL import Image
+import json
+import os
+import re
 import numpy as np
+from PIL import Image
+import streamlit as st
 
-# إعداد الصفحة لتكون خفيفة ومتجاوبة مع الجوال
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
+
 st.set_page_config(
-    page_title="محلل احتمالات الشارت (10 دقائق)",
+    page_title="محلل الشارت التلقائي (10 دقائق)",
     page_icon="📊",
     layout="centered"
 )
 
-# تنسيق عربي بسيط وواضح
 st.markdown("""
 <style>
     .main { direction: rtl; text-align: right; }
     div[data-testid="stRadio"] > label, div[data-testid="stSelectbox"] > label {
         font-weight: bold;
     }
-    .result-box {
-        padding: 18px;
-        border-radius: 12px;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        font-size: 18px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 محلل احتمالات الشارت (10 دقائق)")
-st.caption("أداة مساعدة لتقدير الاحتمالات عبر دمج EMA + RSI 14 + MACD — وليست ضماناً للنتيجة.")
+st.title("📊 محلل الشارت التلقائي (10 دقائق)")
+st.caption("ارفع لقطة الشارت ليقوم النظام بقراءتها وحساب الاحتمالات تلقائياً — أداة مساعدة وليست ضماناً للنتيجة.")
 
-# 1. رفع لقطة الشاشة
-uploaded_file = st.file_uploader("📸 ارفع أو الصق لقطة شاشة الشارت هنا", type=["png", "jpg", "jpeg"])
+def get_api_key() -> str:
+    if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+        return str(st.secrets["GEMINI_API_KEY"]).strip()
+    return os.environ.get("GEMINI_API_KEY", "").strip()
 
-def quick_image_color_hint(img: Image.Image):
-    """فحص بصري أولي بسيط لنسبة الشموع الخضراء والحمراء في منطقة الشارت العليا"""
-    small = img.resize((200, 200)).convert("RGB")
+def fallback_visual_estimate(img: Image.Image) -> dict:
+    """تقدير بصري أولي في حال عدم توفر مفتاح API"""
+    small = img.resize((240, 240)).convert("RGB")
     arr = np.array(small, dtype=np.int16)
-    # التركيز على النصف العلوي (منطقة الشموع)
-    chart_area = arr[:90, :, :]
-    r, g, b = chart_area[:, :, 0], chart_area[:, :, 1], chart_area[:, :, 2]
-    green_pixels = np.sum((g > r + 25) & (g > b + 20) & (g > 80))
-    red_pixels = np.sum((r > g + 25) & (r > b + 20) & (r > 80))
-    total = green_pixels + red_pixels
-    if total == 0:
-        return "غير محدد بصرياً"
-    green_pct = round((green_pixels / total) * 100)
-    red_pct = 100 - green_pct
-    return f"سيطرة لونية أولية في منطقة الشموع: 🟢 {green_pct}% | 🔴 {red_pct}%"
+    h, w, _ = arr.shape
+    chart_zone = arr[: int(h * 0.55), :, :]
+    r, g, b = chart_zone[:, :, 0], chart_zone[:, :, 1], chart_zone[:, :, 2]
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="لقطة الشارت المرفوعة", use_container_width=True)
-    st.info(quick_image_color_hint(image))
-else:
-    st.warning("ارفع لقطة الشاشة أولاً (ويُفضّل التقاطها قبل إغلاق الشمعة بـ 10 إلى 15 ثانية).")
+    green = int(np.sum((g > r + 25) & (g > b + 20) & (g > 80)))
+    red = int(np.sum((r > g + 25) & (r > b + 20) & (r > 80)))
 
-st.divider()
+    if green > red * 1.35:
+        ema_s = "صاعد: السعر فوق الخط والخط مائل للأعلى"
+        candle_s = "شمعة خضراء مؤكدة للصعود (بدون ذيل علوي طويل معيق)"
+        rsi_s = "فوق مستوى 50 ويتجه صعوداً (دون تشبع حاد فوق 75)"
+        macd_s = "زخم صاعد: تقاطع إيجابي أو أعمدة خضراء متصاعدة"
+    elif red > green * 1.35:
+        ema_s = "هابط: السعر تحت الخط والخط مائل للأسفل"
+        candle_s = "شمعة حمراء مؤكدة للهبوط (بدون ذيل سفلي طويل معيق)"
+        rsi_s = "تحت مستوى 50 ويتجه هبوطاً (دون تشبع حاد تحت 25)"
+        macd_s = "زخم هابط: تقاطع سلبي أو أعمدة حمراء متزايدة"
+    else:
+        ema_s = "متداخل / تذبذب عرضي أو بعد قفزة سعرية حادة"
+        candle_s = "شمعة صغيرة مترددة / ذيول طويلة / تصحيح غير واضح"
+        rsi_s = "قرب مستوى 50 (حيرة) أو في تشبع حاد ينذر بارتداد"
+        macd_s = "ضعيف / متقطع قرب خط الصفر أو يعاكس الاتجاه"
 
-# 2. مدخلات الفريم وإدارة رأس المال
+    return {
+        "ema": ema_s,
+        "candle": candle_s,
+        "rsi": rsi_s,
+        "macd": macd_s,
+        "summary": f"تقدير لوني أولي بدون API (أخضر: {green}، أحمر: {red}). أضف GEMINI_API_KEY لقراءة دقيقة للشموع والمؤشرات."
+    }
+
+def analyze_chart_with_gemini(img: Image.Image, timeframe: str, api_key: str) -> dict:
+    client = genai.Client(api_key=api_key)
+    prompt = f"""
+أنت محلل فني خبير لشارت التداول على إطار {timeframe}.
+انظر إلى صورة الشارت المرفقة بدقة وحدد الحالة الفنية لكل عنصر من العناصر الأربعة التالية:
+
+1. "ema": اختر بدقة واحدة فقط من هذه العبارات الثلاث:
+   - "صاعد: السعر فوق الخط والخط مائل للأعلى"
+   - "هابط: السعر تحت الخط والخط مائل للأسفل"
+   - "متداخل / تذبذب عرضي أو بعد قفزة سعرية حادة"
+
+2. "candle": اختر بدقة واحدة فقط من هذه العبارات الثلاث:
+   - "شمعة خضراء مؤكدة للصعود (بدون ذيل علوي طويل معيق)"
+   - "شمعة حمراء مؤكدة للهبوط (بدون ذيل سفلي طويل معيق)"
+   - "شمعة صغيرة مترددة / ذيول طويلة / تصحيح غير واضح"
+
+3. "rsi": اختر بدقة واحدة فقط من هذه العبارات الثلاث:
+   - "فوق مستوى 50 ويتجه صعوداً (دون تشبع حاد فوق 75)"
+   - "تحت مستوى 50 ويتجه هبوطاً (دون تشبع حاد تحت 25)"
+   - "قرب مستوى 50 (حيرة) أو في تشبع حاد ينذر بارتداد"
+
+4. "macd": اختر بدقة واحدة فقط من هذه العبارات الثلاث:
+   - "زخم صاعد: تقاطع إيجابي أو أعمدة خضراء متصاعدة"
+   - "زخم هابط: تقاطع سلبي أو أعمدة حمراء متزايدة"
+   - "ضعيف / متقطع قرب خط الصفر أو يعاكس الاتجاه"
+
+5. "summary": ملخص قصير جداً ومباشر بالعربية (سطر أو سطرين) عن حركة الشارت واحتمال الـ 10 دقائق، مع التنبيه إذا كانت الصورة مقصوصة أو الشموع غير واضحة.
+
+أعد النتيجة بصيغة JSON صالحة فقط دون أي نص إضافي خارج JSON.
+"""
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[img, prompt],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.1,
+        ),
+    )
+    raw = (response.text or "").strip()
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    data = json.loads(match.group(0) if match else raw)
+    return data
+
+uploaded_file = st.file_uploader("📸 ارفع لقطة شاشة الشارت هنا", type=["png", "jpg", "jpeg"])
+
 col1, col2, col3 = st.columns(3)
 with col1:
-    timeframe = st.selectbox("الإطار الزمني (الفريم)", ["M5 (الأفضل)", "M15", "M1", "M30"], index=0)
+    timeframe = st.selectbox("الإطار الزمني", ["M5 (الأفضل)", "M15", "M1", "M30"], index=0)
 with col2:
-    balance = st.number_input("الرصيد الحالي ($)", min_value=1.0, value=1000.0, step=10.0)
+    balance = st.number_input("الرصيد ($)", min_value=1.0, value=1000.0, step=10.0)
 with col3:
     stake = st.number_input("مبلغ الصفقة ($)", min_value=1.0, value=25.0, step=5.0)
 
-# تنبيه إدارة المخاطر الصارم
 risk_pct = (stake / balance) * 100 if balance > 0 else 100
 if risk_pct > 5:
-    st.error(f"⚠️ تنبيه مخاطرة: مبلغ الصفقة يمثل {risk_pct:.1f}% من رصيدك! يُنصح ألا يتجاوز 1% إلى 3%.")
+    st.error(f"⚠️ تنبيه مخاطرة: مبلغ الصفقة يمثل {risk_pct:.1f}% من رصيدك! يُنصح ألا يتجاوز 1%–3%.")
 
-st.subheader("🔍 قراءة الشروط الأربعة على الشارت")
-
-# 3. تقييم النقاط الأربع
-ema_state = st.radio(
-    "1️⃣ وضع السعر مع خط Moving Average (EMA):",
-    [
-        "صاعد: السعر فوق الخط والخط مائل للأعلى",
-        "هابط: السعر تحت الخط والخط مائل للأسفل",
-        "متداخل / تذبذب عرضي أو بعد قفزة سعرية حادة"
-    ],
-    index=2
-)
-
-candle_state = st.radio(
-    "2️⃣ سلوك الشمعة الحالية وقت الإغلاق:",
-    [
-        "شمعة خضراء مؤكدة للصعود (بدون ذيل علوي طويل معيق)",
-        "شمعة حمراء مؤكدة للهبوط (بدون ذيل سفلي طويل معيق)",
-        "شمعة صغيرة مترددة / ذيول طويلة / تصحيح غير واضح"
-    ],
-    index=2
-)
-
-rsi_state = st.radio(
-    "3️⃣ وضع مؤشر RSI 14:",
-    [
-        "فوق مستوى 50 ويتجه صعوداً (دون تشبع حاد فوق 75)",
-        "تحت مستوى 50 ويتجه هبوطاً (دون تشبع حاد تحت 25)",
-        "قرب مستوى 50 (حيرة) أو في تشبع حاد ينذر بارتداد"
-    ],
-    index=2
-)
-
-macd_state = st.radio(
-    "4️⃣ وضع مؤشر MACD (12, 26, 9):",
-    [
-        "زخم صاعد: تقاطع إيجابي أو أعمدة خضراء متصاعدة",
-        "زخم هابط: تقاطع سلبي أو أعمدة حمراء متزايدة",
-        "ضعيف / متقطع قرب خط الصفر أو يعاكس الاتجاه"
-    ],
-    index=2
-)
-
-# 4. حساب النقاط والاحتمالات
-if st.button("🚀 احسب الاحتمال والقرار الآن", use_container_width=True):
-    bull_score = 0
-    bear_score = 0
-    reasons = []
-
-    # تقييم EMA
-    if "صاعد" in ema_state:
-        bull_score += 1
-        reasons.append("✅ السعر مدعوم فوق المتوسط الصاعد.")
-    elif "هابط" in ema_state:
-        bear_score += 1
-        reasons.append("✅ السعر يتحرك أسفل المتوسط الهابط.")
-    else:
-        reasons.append("⚠️ غياب اتجاه واضح مع EMA أو وجود تذبذب.")
-
-    # تقييم الشمعة
-    if "خضراء" in candle_state:
-        bull_score += 1
-        reasons.append("✅ إغلاق الشمعة يدعم الزخم الشرائي.")
-    elif "حمراء" in candle_state:
-        bear_score += 1
-        reasons.append("✅ إغلاق الشمعة يدعم الزخم البيعي.")
-    else:
-        reasons.append("⚠️ سلوك الشمعة يُظهر تردداً أو رفضاً سعرياً.")
-
-    # تقييم RSI
-    if "فوق مستوى 50" in rsi_state:
-        bull_score += 1
-        reasons.append("✅ مؤشر RSI 14 يدعم الصعود دون تشبع مفرط.")
-    elif "تحت مستوى 50" in rsi_state:
-        bear_score += 1
-        reasons.append("✅ مؤشر RSI 14 يدعم الهبوط دون تشبع مفرط.")
-    else:
-        reasons.append("⚠️ مؤشر RSI 14 في منطقة حيرة أو تشبع خطير.")
-
-    # تقييم MACD
-    if "زخم صاعد" in macd_state:
-        bull_score += 1
-        reasons.append("✅ مؤشر MACD يؤكد الزخم الصاعد.")
-    elif "زخم هابط" in macd_state:
-        bear_score += 1
-        reasons.append("✅ مؤشر MACD يؤكد الزخم الهابط.")
-    else:
-        reasons.append("⚠️ مؤشر MACD ضعيف أو متضارب.")
-
-    # حساب النسبة التقديرية بناءً على تطابق الشروط
-    st.divider()
-    st.subheader("📌 نتيجة الفحص وتقدير حركة الـ 10 دقائق")
-
-    if risk_pct > 15:
-        st.error("🛑 تم إيقاف التوصية بالدخول: مبلغ الصفقة مرتفع جداً مقارنة بالرصيد. خفّض المبلغ أولاً.")
-    elif bull_score >= 3 and bear_score == 0:
-        prob = 72 if bull_score == 3 else 82
-        st.success(f"🟢 القرار: **شراء (CALL)** | قوة التطابق: **{bull_score}/4** (احتمال تقديري: ~{prob}%)")
-        st.write("⏱️ **المدة المقترحة:** `00:02:30` إلى `00:03:00` (مع مراقبة استمرار الموجة خلال 10 دقائق).")
-    elif bear_score >= 3 and bull_score == 0:
-        prob = 72 if bear_score == 3 else 82
-        st.error(f"🔴 القرار: **بيع (PUT)** | قوة التطابق: **{bear_score}/4** (احتمال تقديري: ~{prob}%)")
-        st.write("⏱️ **المدة المقترحة:** `00:02:30` إلى `00:03:00` (مع مراقبة استمرار الموجة خلال 10 دقائق).")
-    else:
-        st.warning(f"⏸️ القرار: **تجاوز / لا تدخل الآن (WAIT)** | صعود: `{bull_score}/4` — هبوط: `{bear_score}/4`")
-        st.write("السبب: الإشارات غير مكتملة أو متضاربة، واحتمال التذبذب خلال الـ 10 دقائق القادمة مرتفع.")
-
-    for r in reasons:
-        st.write(r)
+ema_options = [
+    "صاعد: السعر فوق الخط والخط مائل للأعلى",
+    "هابط: السعر تحت الخط والخط مائل للأسفل",
+    "متداخل / تذبذب عرضي أو بعد قفزة سعرية حادة"
+]
+candle_options = [
+    "شمعة خضراء مؤكدة للصعود (بدون ذيل علوي طويل معيق)",
+    "شمعة حمراء مؤكدة للهبوط (
